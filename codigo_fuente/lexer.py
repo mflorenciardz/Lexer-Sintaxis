@@ -3,7 +3,7 @@
 
 #Su función es transformar una secuencia de caracteres en una secuencia de tokens.
 
-from tokens import PALABRAS_RESERVADAS, OPERADORES
+from tokens import PALABRAS_RESERVADAS, SIMBOLOS, BOOLEANOS, OPERADORES, SENSORES, PREFIJO_ACUTADORES
 
 #la función reservada devuelve cada palabra con el token_ delante o none
 def reservada(palabra):
@@ -13,6 +13,39 @@ def reservada(palabra):
         return f"TOKEN_{palabra}"
     return None
 
+def es_booleano(token):
+    token = token.upper()
+
+    if token in BOOLEANOS:
+        return True
+    return False
+
+def es_operador(token):
+    if token in OPERADORES:
+        return True
+    return False 
+
+def es_numero(token):
+    if token.isdigit():
+        return True
+    return False
+
+def es_sensor(token):
+    if token in SENSORES:
+        return True
+    return False
+
+def es_actuador(token):
+    for prefijo in PREFIJO_ACUTADORES:
+        if token.startswith(prefijo):
+            return True
+    return False
+
+def es_comentario(token):
+    if token.startswith("//"):
+        return True
+    return False
+
 #la función simbolo_valido devuelve verdadero o falso si, caraccter por caracte, es valido.
 #ve si es una letra, un número, o si es parte de los operadores
 def simbolo_valido(caracter):
@@ -20,14 +53,14 @@ def simbolo_valido(caracter):
         return True
     if caracter.isdigit():
         return True
-    if caracter in OPERADORES:
+    if caracter in SIMBOLOS:
         return True
     if caracter == " ":
         return True
     return False
 
 #aca verificamos si está bien cada palabra en donde está
-def verificar_valido_contexto(texto):
+def verificar_alfabeto(texto):
     for caracter in texto: 
         if not simbolo_valido(caracter):
             return caracter
@@ -52,6 +85,7 @@ def validar_email(email):
         return False
     if dominio.endswith("."):
         return False 
+    return True
     
 def validar_hora(hora):
     if hora.count(":") != 1:
@@ -111,7 +145,7 @@ def validar_temperatura(temp):
     
     grados = temp[:-2];
 
-    if grados.startswitch("-"):
+    if grados.startswith("-"):
         grados = grados[1:]
     
     if not grados.isdigit():
@@ -142,3 +176,104 @@ def validar_cadena(cadena):
         return False
     
     return True
+
+def validar_luz(luz):
+
+    if not luz.endswith("lux"):
+        return False
+
+    cantidad = luz[:-3]
+
+    if not cantidad.isdigit():
+        return False
+
+    return True
+
+
+def clasificar_token(token):
+
+    reservado = reservada(token)
+
+    if reservado is not None:
+        return reservado
+
+    if es_booleano(token):
+        return f"TOKEN_{token.upper()}"
+
+    if es_sensor(token):
+        return f"TOKEN_{token.upper()}"
+
+    if es_actuador(token):
+        return "TOKEN_ACTUADOR"
+    
+    if es_comentario(token):
+        return "TOKEN_COMENTARIO"
+
+    if token == ">=":
+        return "TOKEN_MAYOR_IGUAL"
+
+    if token == "<=":
+        return "TOKEN_MENOR_IGUAL"
+
+    if token == "==":
+        return "TOKEN_IGUALDAD"
+
+    if token == "!=":
+        return "TOKEN_DISTINTO"
+
+    if token == ">":
+        return "TOKEN_MAYOR"
+
+    if token == "<":
+        return "TOKEN_MENOR"
+
+    if token == "=":
+        return "TOKEN_ASIGNACION"
+
+    if es_numero(token):
+        return "TOKEN_NUMERO"
+
+    if validar_email(token):
+        return "TOKEN_EMAIL"
+
+    if validar_hora(token):
+        return "TOKEN_HORA"
+
+    if validar_fecha(token):
+        return "TOKEN_FECHA"
+
+    if validar_temperatura(token):
+        return "TOKEN_TEMPERATURA"
+
+    if validar_porcentaje(token):
+        return "TOKEN_PORCENTAJE"
+
+    if validar_cadena(token):
+        return "TOKEN_CADENA"
+    
+    if validar_luz(token):
+        return "TOKEN_LUZ"
+
+    return None
+
+def tipo_error(token):
+
+    if "@" in token:
+        return "EMAIL"
+
+    if ":" in token:
+        return "HORA"
+
+    if "/" in token:
+        return "FECHA"
+
+    if token.endswith("°C"):
+        return "TEMPERATURA"
+
+    if token.endswith("%"):
+        return "PORCENTAJE"
+
+    if token.startswith('"') or token.endswith('"'):
+        return "CADENA"
+
+    return "TOKEN"

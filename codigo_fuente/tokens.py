@@ -18,7 +18,6 @@ PALABRAS_RESERVADAS = {
     "NOT", 
 }
 
-
 OPERADORES = {
     "==",
     "!=",
@@ -27,10 +26,38 @@ OPERADORES = {
     ">=",
     "<=",
     "=",
+}
+SIMBOLOS ={
     "@",
     ".",
     ":",
     "%",
-    "!"
-    "/"
+    "!",
+    "/",
+    '"',
+}
+
+SENSORES = {
+    "sensor_temp",
+    "sensor_humo",
+    "sensor_humedad",
+    "sensor_luz",
+    "sensor_movimiento",
+}
+
+BOOLEANOS = {
+    "TRUE",
+    "FALSE",
+    "ON",
+    "OFF",
+}
+
+PREFIJO_ACUTADORES = {
+    "foco_",
+    "aire_",
+    "persiana_",
+    "cerradura_",
+    "reloj_",
+    "altavoz_",
+    "alarma_",
 }

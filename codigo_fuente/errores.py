@@ -38,7 +38,7 @@ def error_email(mail, linea):
     print(f"Línea: {linea}\n");
     print(f"error {mail}\n")
 
-def erro_cadena(string, linea):
+def error_cadena(string, linea):
     print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
     print(f"Línea: {linea}\n");
     print(f"no cerró el string {string}\n")
