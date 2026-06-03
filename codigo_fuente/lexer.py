@@ -5,7 +5,8 @@
 
 import tokens
 
-#la función reservada devuelve cada palabra con el token_ delante o none
+# Busca si la palabra es una reservada del Lenguaje
+#si la encuentra, devuelve TOKEN_X
 def reservada(palabra):
     palabra = palabra.upper()
 
@@ -13,6 +14,9 @@ def reservada(palabra):
         return f"TOKEN_{palabra}"
     return None
 
+# Esto es para ver a qué categoría pertenece cada token.
+
+# Devuelven True o False según corresponda.
 def es_booleano(token):
     token = token.upper()
 
@@ -35,6 +39,8 @@ def es_sensor(token):
         return True
     return False
 
+# Como los actuadores pueden llamarse foco_, reloj_, etc.,
+# alcanza con revisar que empiecen con alguno de los prefijos definidos.
 def es_actuador(token):
     for prefijo in tokens.PREFIJO_ACTUADORES:
         if token.startswith(prefijo):
@@ -42,8 +48,8 @@ def es_actuador(token):
     return False
 
 
-#la función simbolo_valido devuelve verdadero o falso si, caraccter por caracte, es valido.
-#ve si es una letra, un número, o si es parte de los operadores
+# Acá definimos qué caracteres están permitidos en el lenguaje.
+# Esto se usa antes de clasificar tokens para detectar símbolos tipo $&|.
 def simbolo_valido(caracter):
     if caracter.isalpha():
         return True
@@ -53,10 +59,16 @@ def simbolo_valido(caracter):
         return True
     if caracter == " ":
         return True
+    if caracter == "_":
+        return True
     return False
 
-#aca verificamos si está bien cada palabra en donde está
+# Recorremos toda la línea buscando caracteres inválidos.
+# Si estamos dentro de una cadena ignoramos lo que haya adentro
+# porque forma parte del mensaje y no del código.
 def verificar_alfabeto(texto):
+
+    simbolos_invalidos = []
 
     dentro_cadena = False
 
@@ -70,10 +82,17 @@ def verificar_alfabeto(texto):
             continue
 
         if not simbolo_valido(caracter):
-            return caracter
+            simbolos_invalidos.append(caracter)
 
-    return None
+    return simbolos_invalidos
 
+
+# A partir de acá empiezan las validaciones de cada tipo de dato.
+# La idea es revisar que tengan el formato correcto.
+
+
+# Un mail tiene que tener un solo @ y algo antes y después.
+# También revisamos que el dominio tenga un punto.
 def validar_email(email):
     if email.count("@") != 1:
         return False
@@ -95,6 +114,7 @@ def validar_email(email):
         return False 
     return True
     
+# Revisamos que la hora tenga formato HH:MM y que los valores tengan sentido.
 def validar_hora(hora):
     if hora.count(":") != 1:
         return False
@@ -118,6 +138,8 @@ def validar_hora(hora):
     
     return True
 
+# Revisamos que la fecha tenga formato DD/MM/AAAA.
+# Por ahora controlamos rangos generales, no meses específicos.
 def validar_fecha(fecha):
     if fecha.count("/") != 2:
         return False
@@ -147,6 +169,8 @@ def validar_fecha(fecha):
     
     return True
 
+# La temperatura tiene que terminar en °C.
+# También permitimos temperaturas negativas.
 def validar_temperatura(temp):
     if not temp.endswith("°C"):
         return False 
@@ -161,6 +185,7 @@ def validar_temperatura(temp):
     
     return True
 
+# Un porcentaje tiene que terminar en % y estar entre 0 y 100.
 def validar_porcentaje(percent):
     if not percent.endswith("%"):
         return False
@@ -177,6 +202,7 @@ def validar_porcentaje(percent):
     
     return True
 
+# Una cadena tiene que empezar y terminar con comillas.
 def validar_cadena(cadena):
     if not cadena.endswith('"'):
         return False
@@ -185,6 +211,8 @@ def validar_cadena(cadena):
     
     return True
 
+# Las mediciones de luz se expresan en lux.
+# Revisamos que la parte numérica sea válida.
 def validar_luz(luz):
 
     if not luz.endswith("lux"):
@@ -198,8 +226,9 @@ def validar_luz(luz):
     return True
 
 
-# Se encarga de recorrer una línea de código y separarla en tokens,
-#respetando cadenas entre comillas, comentarios y atributos.
+# Va recorriendo la línea carácter por carácter y armando los tokens
+#acá resolvemos cosas que un split() no puede manejar
+#separarla en tokens respetando cadenas entre comillas, comentarios y atributos.
 def tokenizar(linea):
 
     lista_tokens = []
@@ -211,7 +240,7 @@ def tokenizar(linea):
 
         caracter = linea[i]
 
-        # Cadenas entre comillas
+        #para cadenas tipo "Hola"
         if caracter == '"':
 
             if actual != "":
@@ -237,7 +266,7 @@ def tokenizar(linea):
 
             continue
 
-        # Comentarios
+        #con los comentarios que son //
         if caracter == "/" and i + 1 < len(linea):
 
             if linea[i + 1] == "/":
@@ -251,7 +280,7 @@ def tokenizar(linea):
 
                 break
 
-        # Espacios
+        #también tenemos que ver los espacios:
         if caracter == " ":
 
             if actual != "":
@@ -261,7 +290,7 @@ def tokenizar(linea):
             i += 1
             continue
 
-        # Punto (separa actuador y atributo)
+        #hay que separa actuador y atributo con el puntoq tienen en el medio
         if caracter == ".":
 
             if actual != "":
@@ -277,17 +306,19 @@ def tokenizar(linea):
 
         i += 1
 
-    # Agrega el último token si quedó algo pendiente
+    #agrega el último token si quedó algo pendiente
     if actual != "":
         lista_tokens.append(actual)
 
     return lista_tokens
 
+# Un comentario empieza con // y se ignora hasta el final de la línea.
 def es_comentario(token):
     if token.startswith("//"):
         return True
     return False
 
+#ve si el texto corresponde a alguno de los atributos con los actuadores.
 def es_atributo(token):
 
     token = token.upper()
@@ -298,7 +329,8 @@ def es_atributo(token):
     return False
 
 
-
+#es para saber qué es cada token.
+#Va probando categoría por categoría hasta encontrar la que es igual
 def clasificar_token(token):
 
     reservado = reservada(token)
@@ -371,6 +403,8 @@ def clasificar_token(token):
 
     return None
 
+#si no se clasificó el tkn, vemos qué prodría haber sido
+#así mostramos un mensaje de error más específico
 def tipo_error(token):
 
     if "@" in token:

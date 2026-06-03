@@ -1,50 +1,59 @@
 #Manejo de errores léxicos.
 
-#Contiene las funciones necesarias para detectar y reportar errores durante el análisis léxico.
-
-#Debe indicar:
-
+#Muestra:
 #Tipo de error.
 #Línea donde ocurrió.
-#Cadena o símbolo que produjo el error.
+
+def encabezado_error(linea):
+
+    print("<<<<<<< ERROR LÉXICO >>>>>>>")
+    print(f"Línea: {linea}")
 
 def error_token(token, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"token desonocido {token}\n")
 
-def error_simbolo(operador, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"símbolo inválido {operador}\n")
+    encabezado_error(linea)
+
+    print(f"Token desconocido: {token}\n")
+
+def error_simbolo(simbolo, linea):
+
+    encabezado_error(linea)
+
+    print(f"Símbolo inválido: {simbolo}\n")
 
 def error_hora(hora, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"Hora no válida {hora}\n")
+
+    encabezado_error(linea)
+
+    print(f"Hora no válida: {hora}\n")
 
 def error_fecha(fecha, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"Fecha no válida {fecha}\n")
+
+    encabezado_error(linea)
+
+    print(f"Fecha no válida: {fecha}\n")
 
 def error_temp(temp, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"temperatura inválida {temp}\n")
+
+    encabezado_error(linea)
+
+    print(f"Temperatura inválida: {temp}\n")
 
 def error_email(mail, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"error {mail}\n")
 
-def error_cadena(string, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"no cerró el string {string}\n")
+    encabezado_error(linea)
+
+    print(f"Email inválido: {mail}\n")
+
+def error_cadena(cadena, linea):
+
+    encabezado_error(linea)
+
+    print(f"Cadena sin cerrar: {cadena}\n")
 
 def error_porcentaje(percent, linea):
-    print("<<<<<<< ERROR LÉXICO >>>>>>>\n");
-    print(f"Línea: {linea}\n");
-    print(f"error en {percent}\n")
+
+    encabezado_error(linea)
+
+    print(f"Porcentaje inválido: {percent}\n")
 

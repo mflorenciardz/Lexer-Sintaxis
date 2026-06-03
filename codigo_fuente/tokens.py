@@ -1,7 +1,6 @@
 #Definición de tokens.
 
-#Contiene la lista de tokens que reconoce el lenguaje, como palabras reservadas, sensores, 
-# actuadores, operadores, literales, etc.
+#Contiene la lista de tokens que reconoce el lenguaje, como palabras reservadas, sensores, etc.
 
 #Permite mantener organizada la clasificación de todos los componentes léxicos.
 

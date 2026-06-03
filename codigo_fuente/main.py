@@ -1,8 +1,4 @@
-# Archivo principal del programa.
-
-#Es el encargado de iniciar la ejecución del lexer. 
-#Lee el texto ingresado por el usuario o el archivo de prueba y muestra los tokens reconocidos 
-# o los errores encontrados.
+#acá no se analiza nada, sino que le va pasando el trabajo por lexer y se muestra el rtdo
 
 from lexer import (
     tokenizar,
@@ -13,7 +9,8 @@ from lexer import (
 
 import errores
 
-
+#acá hice como un diccionario para relacionar digamos cada tipo de error
+#con la función que lo muestra por pantalla.
 ERRORES = {
     "EMAIL": errores.error_email,
     "HORA": errores.error_hora,
@@ -23,7 +20,7 @@ ERRORES = {
     "CADENA": errores.error_cadena
 }
 
-
+#acá empieza el programa con el menú centrado
 def encabezado():
 
     print("=" * 60)
@@ -36,11 +33,14 @@ def encabezado():
     print("Escriba SALIR para finalizar.")
     print()
 
-
+#mostramos menú
 encabezado()
 
+#empezamos un contador así vamos contando las líneas para poder
+#saber dónde está cada error
 linea_actual = 1
 
+#no termina el programa hasta que se ponga SALIR
 while True:
 
     linea = input(f"[{linea_actual}] > ")
@@ -49,15 +49,15 @@ while True:
         print("\nFin del programa.")
         break
 
-    simbolo = verificar_alfabeto(linea)
+    #primero vemos si no hay algun caracter que no pertenezca
+    simbolos_invalidos = verificar_alfabeto(linea)
 
-    if simbolo is not None:
-
+    #si aparece un simbolo no valido, mostramos el error
+    for simbolo in simbolos_invalidos:
         errores.error_simbolo(simbolo, linea_actual)
 
-        linea_actual += 1
-        continue
-
+    #es más que nada por los casos con los actuadores.atributo
+    #esto los separa así vemos si está bien escrito el actuador y el atributo
     lista_tokens = tokenizar(linea)
 
     print("\nTokens encontrados:\n")
@@ -66,6 +66,8 @@ while True:
 
         token = clasificar_token(token_original)
 
+        #si encontramos un comentario, lo mostramos y dejamos de analizar
+        #porque el resto de la línea ya forma parte del comentario
         if token == "TOKEN_COMENTARIO":
 
             print(f"• {token}")
@@ -77,6 +79,7 @@ while True:
 
         else:
 
+            #si no pudimos clasificar el token, intentamos averiguar qué tipo de error es
             tipo = tipo_error(token_original)
 
             funcion_error = ERRORES.get(tipo)
@@ -91,4 +94,5 @@ while True:
 
     print()
 
+    #pasamos a la siguiente línea ingresada por el usuario
     linea_actual += 1
