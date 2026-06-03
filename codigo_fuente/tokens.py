@@ -29,7 +29,6 @@ OPERADORES = {
 }
 SIMBOLOS ={
     "@",
-    ".",
     ":",
     "%",
     "!",
@@ -52,7 +51,7 @@ BOOLEANOS = {
     "OFF",
 }
 
-PREFIJO_ACUTADORES = {
+PREFIJO_ACTUADORES = {
     "foco_",
     "aire_",
     "persiana_",
@@ -60,4 +59,21 @@ PREFIJO_ACUTADORES = {
     "reloj_",
     "altavoz_",
     "alarma_",
+}
+
+ATRIBUTOS = {
+    "ESTADO",
+    "BRILLO",
+    "COLOR",
+    "MODO",
+    "TEMP_OBJ",
+    "TEMP_ACT",
+    "POSICION",
+    "ACTIVADA",
+    "HORA",
+    "FECHA",
+    "VOLUMEN",
+    "MUTE",
+    "MENSAJE",
+    "EMAIL"
 }

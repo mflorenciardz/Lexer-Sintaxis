@@ -3,25 +3,25 @@
 
 #Su función es transformar una secuencia de caracteres en una secuencia de tokens.
 
-from tokens import PALABRAS_RESERVADAS, SIMBOLOS, BOOLEANOS, OPERADORES, SENSORES, PREFIJO_ACUTADORES
+import tokens
 
 #la función reservada devuelve cada palabra con el token_ delante o none
 def reservada(palabra):
     palabra = palabra.upper()
 
-    if palabra in PALABRAS_RESERVADAS:
+    if palabra in tokens.PALABRAS_RESERVADAS:
         return f"TOKEN_{palabra}"
     return None
 
 def es_booleano(token):
     token = token.upper()
 
-    if token in BOOLEANOS:
+    if token in tokens.BOOLEANOS:
         return True
     return False
 
 def es_operador(token):
-    if token in OPERADORES:
+    if token in tokens.OPERADORES:
         return True
     return False 
 
@@ -31,20 +31,16 @@ def es_numero(token):
     return False
 
 def es_sensor(token):
-    if token in SENSORES:
+    if token in tokens.SENSORES:
         return True
     return False
 
 def es_actuador(token):
-    for prefijo in PREFIJO_ACUTADORES:
+    for prefijo in tokens.PREFIJO_ACTUADORES:
         if token.startswith(prefijo):
             return True
     return False
 
-def es_comentario(token):
-    if token.startswith("//"):
-        return True
-    return False
 
 #la función simbolo_valido devuelve verdadero o falso si, caraccter por caracte, es valido.
 #ve si es una letra, un número, o si es parte de los operadores
@@ -53,7 +49,7 @@ def simbolo_valido(caracter):
         return True
     if caracter.isdigit():
         return True
-    if caracter in SIMBOLOS:
+    if caracter in tokens.SIMBOLOS:
         return True
     if caracter == " ":
         return True
@@ -190,6 +186,107 @@ def validar_luz(luz):
     return True
 
 
+# Se encarga de recorrer una línea de código y separarla en tokens,
+#respetando cadenas entre comillas, comentarios y atributos.
+def tokenizar(linea):
+
+    lista_tokens = []
+    actual = ""
+
+    i = 0
+
+    while i < len(linea):
+
+        caracter = linea[i]
+
+        # Cadenas entre comillas
+        if caracter == '"':
+
+            if actual != "":
+                lista_tokens.append(actual)
+                actual = ""
+
+            cadena = '"'
+
+            i += 1
+
+            while i < len(linea):
+
+                cadena += linea[i]
+
+                if linea[i] == '"':
+                    break
+
+                i += 1
+
+            lista_tokens.append(cadena)
+
+            i += 1
+
+            continue
+
+        # Comentarios
+        if caracter == "/" and i + 1 < len(linea):
+
+            if linea[i + 1] == "/":
+
+                if actual != "":
+                    lista_tokens.append(actual)
+
+                comentario = linea[i:]
+
+                lista_tokens.append(comentario)
+
+                break
+
+        # Espacios
+        if caracter == " ":
+
+            if actual != "":
+                lista_tokens.append(actual)
+                actual = ""
+
+            i += 1
+            continue
+
+        # Punto (separa actuador y atributo)
+        if caracter == ".":
+
+            if actual != "":
+                lista_tokens.append(actual)
+                actual = ""
+
+            lista_tokens.append(".")
+
+            i += 1
+            continue
+
+        actual += caracter
+
+        i += 1
+
+    # Agrega el último token si quedó algo pendiente
+    if actual != "":
+        lista_tokens.append(actual)
+
+    return lista_tokens
+
+def es_comentario(token):
+    if token.startswith("//"):
+        return True
+    return False
+
+def es_atributo(token):
+
+    token = token.upper()
+
+    if token in tokens.ATRIBUTOS:
+        return True
+
+    return False
+
+
+
 def clasificar_token(token):
 
     reservado = reservada(token)
@@ -206,9 +303,6 @@ def clasificar_token(token):
     if es_actuador(token):
         return "TOKEN_ACTUADOR"
     
-    if es_comentario(token):
-        return "TOKEN_COMENTARIO"
-
     if token == ">=":
         return "TOKEN_MAYOR_IGUAL"
 
@@ -253,6 +347,15 @@ def clasificar_token(token):
     
     if validar_luz(token):
         return "TOKEN_LUZ"
+    
+    if es_comentario(token):
+        return "TOKEN_COMENTARIO"
+
+    if token == ".":
+        return "TOKEN_PUNTO"
+ 
+    if es_atributo(token):
+        return f"TOKEN_{token.upper()}"
 
     return None
 
@@ -263,6 +366,9 @@ def tipo_error(token):
 
     if ":" in token:
         return "HORA"
+    
+    if token.strartswith("//"):
+        return "COMENTARIO"
 
     if "/" in token:
         return "FECHA"
@@ -277,3 +383,4 @@ def tipo_error(token):
         return "CADENA"
 
     return "TOKEN"
+

@@ -5,6 +5,8 @@
 # o los errores encontrados.
 
 from lexer import clasificar_token, verificar_alfabeto
+import errores
+import lexer
 
 #es para centrar en la terminal y para que se muestre el menú
 def encabezado():
@@ -26,7 +28,7 @@ while True:
 
     linea = input("> ")
 
-    simbolo_invalido = verificar_alfabeto(linea)
+    simbolo_invalido = lexer.verificar_alfabeto(linea)
 
     if simbolo_invalido is not None:
         print(f"Error léxico: símbolo inválido '{simbolo_invalido}'")
@@ -42,7 +44,7 @@ while True:
 
     for palabra in palabras:
 
-        token = clasificar_token(palabra)
+        token = lexer.clasificar_token(palabra)
 
         if token:
             print(f"• {token}")
