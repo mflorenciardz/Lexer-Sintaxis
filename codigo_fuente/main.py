@@ -4,11 +4,26 @@
 #Lee el texto ingresado por el usuario o el archivo de prueba y muestra los tokens reconocidos 
 # o los errores encontrados.
 
-from lexer import clasificar_token, verificar_alfabeto
-import errores
-import lexer
+from lexer import (
+    tokenizar,
+    clasificar_token,
+    tipo_error,
+    verificar_alfabeto
+)
 
-#es para centrar en la terminal y para que se muestre el menú
+import errores
+
+
+ERRORES = {
+    "EMAIL": errores.error_email,
+    "HORA": errores.error_hora,
+    "FECHA": errores.error_fecha,
+    "TEMPERATURA": errores.error_temp,
+    "PORCENTAJE": errores.error_porcentaje,
+    "CADENA": errores.error_cadena
+}
+
+
 def encabezado():
 
     print("=" * 60)
@@ -17,39 +32,63 @@ def encabezado():
     print("=" * 60)
 
     print()
-    print("Ingrese líneas de código Smart Home.")
+    print("Ingrese código Smart Home.")
     print("Escriba SALIR para finalizar.")
     print()
 
 
 encabezado()
 
+linea_actual = 1
+
 while True:
 
-    linea = input("> ")
-
-    simbolo_invalido = lexer.verificar_alfabeto(linea)
-
-    if simbolo_invalido is not None:
-        print(f"Error léxico: símbolo inválido '{simbolo_invalido}'")
-        continue
+    linea = input(f"[{linea_actual}] > ")
 
     if linea.upper() == "SALIR":
         print("\nFin del programa.")
         break
 
-    palabras = linea.split()
+    simbolo = verificar_alfabeto(linea)
+
+    if simbolo is not None:
+
+        errores.error_simbolo(simbolo, linea_actual)
+
+        linea_actual += 1
+        continue
+
+    lista_tokens = tokenizar(linea)
 
     print("\nTokens encontrados:\n")
 
-    for palabra in palabras:
+    for token_original in lista_tokens:
 
-        token = lexer.clasificar_token(palabra)
+        token = clasificar_token(token_original)
 
-        if token:
+        if token == "TOKEN_COMENTARIO":
+
+            print(f"• {token}")
+            break
+
+        elif token is not None:
+
             print(f"• {token}")
 
         else:
-            print(f"• ERROR: {palabra}")
+
+            tipo = tipo_error(token_original)
+
+            funcion_error = ERRORES.get(tipo)
+
+            if funcion_error is not None:
+
+                funcion_error(token_original, linea_actual)
+
+            else:
+
+                errores.error_token(token_original, linea_actual)
 
     print()
+
+    linea_actual += 1

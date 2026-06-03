@@ -57,9 +57,21 @@ def simbolo_valido(caracter):
 
 #aca verificamos si está bien cada palabra en donde está
 def verificar_alfabeto(texto):
-    for caracter in texto: 
+
+    dentro_cadena = False
+
+    for caracter in texto:
+
+        if caracter == '"':
+            dentro_cadena = not dentro_cadena
+            continue
+
+        if dentro_cadena:
+            continue
+
         if not simbolo_valido(caracter):
             return caracter
+
     return None
 
 def validar_email(email):
@@ -367,7 +379,7 @@ def tipo_error(token):
     if ":" in token:
         return "HORA"
     
-    if token.strartswith("//"):
+    if token.startswith("//"):
         return "COMENTARIO"
 
     if "/" in token:
