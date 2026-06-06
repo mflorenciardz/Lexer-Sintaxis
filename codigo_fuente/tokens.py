@@ -1,8 +1,6 @@
-#Definición de tokens.
-
-#Contiene la lista de tokens que reconoce el lenguaje, como palabras reservadas, sensores, etc.
-
-#Permite mantener organizada la clasificación de todos los componentes léxicos.
+# Definición de tokens.
+# Contiene la lista de tokens que reconoce el lenguaje, como palabras reservadas, sensores, etc.
+# Permite mantener organizada la clasificación de todos los componentes léxicos.
 
 PALABRAS_RESERVADAS = {
     "WHEN",
@@ -14,7 +12,7 @@ PALABRAS_RESERVADAS = {
     "EVERY",
     "AND",
     "OR",
-    "NOT", 
+    "NOT",
 }
 
 OPERADORES = {
@@ -26,20 +24,30 @@ OPERADORES = {
     "<=",
     "=",
 }
-SIMBOLOS ={
+
+SIMBOLOS = {
     "@",
     ":",
     "%",
     "!",
     "/",
     '"',
+    '.',
+    '=',
 }
 
-SENSORES = {
+# Sensores numéricos: admiten operadores de comparación (<, >, <=, >=, ==, !=)
+# Se usan en expresion_num → sensor_num operador_comp valor
+SENSORES_NUM = {
     "sensor_temp",
-    "sensor_humo",
     "sensor_humedad",
     "sensor_luz",
+}
+
+# Sensores booleanos: solo admiten operadores de igualdad (==, !=)
+# Se usan en expresion_bool → sensor_bool operador_bool bool
+SENSORES_BOOL = {
+    "sensor_humo",
     "sensor_movimiento",
 }
 
@@ -50,6 +58,8 @@ BOOLEANOS = {
     "OFF",
 }
 
+# Prefijos válidos de actuadores.
+# El lexer los usa para reconocer la parte fija del nombre (ej: "reloj_" en "reloj_cocina").
 PREFIJO_ACTUADORES = {
     "foco_",
     "aire_",
@@ -74,5 +84,5 @@ ATRIBUTOS = {
     "VOLUMEN",
     "MUTE",
     "MENSAJE",
-    "EMAIL"
+    "EMAIL",
 }
