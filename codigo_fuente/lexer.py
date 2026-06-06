@@ -283,32 +283,45 @@ def clasificar_token(token):
 
     # Palabras reservadas (WHEN, IF, DO, etc.)
     reservado = reservada(token)
+
     if reservado is not None:
+        
         return reservado
 
     # Booleanos (TRUE, FALSE, ON, OFF)
     if es_booleano(token):
+
         return f"TOKEN_{token.upper()}"
 
     # Sensores numéricos (sensor_temp, sensor_humedad, sensor_luz)
     if es_sensor_num(token):
+
         return f"TOKEN_SENSOR_NUM({token.upper()})"
 
     # Sensores booleanos (sensor_humo, sensor_movimiento)
     if es_sensor_bool(token):
+
         return f"TOKEN_SENSOR_BOOL({token.upper()})"
 
     # Actuadores con ID 
     # Si el ID falta o es inválido se devuelve None para que main lo trate como error.
     prefijo = prefijo_actuador(token)
+
     if prefijo is not None:
+
         id_parte = token[len(prefijo):]
+
         if id_parte == "":
+
             # Solo el prefijo sin ID → error ACTUADOR_SIN_ID
             return None
+        
         elif es_id_valido(id_parte):
+
             return f"TOKEN_ACTUADOR({prefijo.upper()}{id_parte.upper()})"
+        
         else:
+
             # Prefijo válido pero ID con caracteres inválidos → error ID_INVALIDO
             return None
 
@@ -350,14 +363,17 @@ def clasificar_token(token):
 
     # Comentario
     if es_comentario(token):
+
         return "TOKEN_COMENTARIO"
 
     # Punto separador
     if token == ".":
+
         return "TOKEN_PUNTO"
 
     # Atributos de actuadores (ESTADO, BRILLO, COLOR, etc.)
     if es_atributo(token):
+
         return f"TOKEN_{token.upper()}"
 
     return None
@@ -368,26 +384,45 @@ def tipo_error(token):
 
     # Actuador con prefijo válido pero ID inválido
     prefijo = prefijo_actuador(token)
+
     if prefijo is not None:
+
         id_parte = token[len(prefijo):]
+
         if id_parte == "":
+
             return "ACTUADOR_SIN_ID"
+        
         else:
+
             return "ID_INVALIDO"
 
     if "@" in token:
+
         return "EMAIL"
+    
     if ":" in token:
+
         return "HORA"
+    
     if token.startswith("//"):
+
         return "COMENTARIO"
+    
     if "/" in token:
+
         return "FECHA"
+    
     if token.endswith("°C"):
+
         return "TEMPERATURA"
+    
     if token.endswith("%"):
+
         return "PORCENTAJE"
+    
     if token.startswith('"') or token.endswith('"'):
+
         return "CADENA"
 
     return "TOKEN"
