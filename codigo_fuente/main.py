@@ -129,10 +129,20 @@ if opcion == "1":
 elif opcion == "2":
 
     print("\nArchivos disponibles:")
-    print(" - pruebas_validas.json")
-    print(" - pruebas_invalidas.json")
+    print("1 - pruebas_validas.json")
+    print("2 - pruebas_invalidas.json")
 
-    archivo = input("\nIngrese el archivo JSON: ")
+    opcion_archivo = input("\nOpción: ")
+
+    if opcion_archivo == "1":
+        archivo = "pruebas/pruebas_validas.json"
+
+    elif opcion_archivo == "2":
+        archivo = "pruebas/pruebas_invalidas.json"
+
+    else:
+        print("Opción inválida.")
+        exit()
 
     try:
 
