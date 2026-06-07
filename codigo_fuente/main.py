@@ -135,10 +135,10 @@ elif opcion == "2":
     opcion_archivo = input("\nOpción: ")
 
     if opcion_archivo == "1":
-        archivo = "pruebas/pruebas_validas.json"
+        archivo = "../pruebas/pruebas_validas.json"
 
     elif opcion_archivo == "2":
-        archivo = "pruebas/pruebas_invalidas.json"
+        archivo = "../pruebas/pruebas_invalidas.json"
 
     else:
         print("Opción inválida.")
