@@ -1,0 +1,8 @@
+{
+    "casos": [
+        "WHEN sensor_luz < 300lux DO foco_living.ESTADO = ON",
+        "WHEN reloj_cocina.HORA >= 23:00 DO foco_habitacion.ESTADO = OFF",
+        "WHEN sensor_movimiento == TRUE DO alarma_principal.ACTIVADA = ON",
+        "WHEN sensor_temp > 30°C AND sensor_humedad < 40% DO aire_dormitorio.ESTADO = ON"
+    ]
+}

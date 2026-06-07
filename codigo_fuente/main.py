@@ -1,4 +1,7 @@
-# acá no se analiza nada, sino que le va pasando el trabajo por lexer y se muestra el rtdo
+# acá no se analiza nada, sino que le va pasando el trabajo al lexer
+# y se muestran los resultados
+
+import json
 
 from lexer import (
     tokenizar,
@@ -9,54 +12,39 @@ from lexer import (
 
 import errores
 
-# acá hice como un diccionario para relacionar digamos cada tipo de error
-# con la función que lo muestra por pantalla.
+# relaciona cada tipo de error con la función que lo muestra
 ERRORES = {
-    "EMAIL":           errores.error_email,
-    "HORA":            errores.error_hora,
-    "FECHA":           errores.error_fecha,
-    "TEMPERATURA":     errores.error_temp,
-    "PORCENTAJE":      errores.error_porcentaje,
-    "CADENA":          errores.error_cadena,
+    "EMAIL": errores.error_email,
+    "HORA": errores.error_hora,
+    "FECHA": errores.error_fecha,
+    "TEMPERATURA": errores.error_temp,
+    "PORCENTAJE": errores.error_porcentaje,
+    "CADENA": errores.error_cadena,
     "ACTUADOR_SIN_ID": errores.error_actuador_sin_id,
-    "ID_INVALIDO":     errores.error_id_invalido,
+    "ID_INVALIDO": errores.error_id_invalido,
 }
 
-def encabezado():
-    print("=" * 60)
-    print("SMART HOME LEXER".center(60))
-    print("Analizador Léxico".center(60))
-    print("=" * 60)
-    print()
-    print("Ingrese código Smart Home.")
-    print("Escriba SALIR para finalizar.")
-    print()
 
-# mostramos menú
-encabezado()
+# lee un archivo json y devuelve la lista de casos de prueba
+def leer_json(nombre_archivo):
 
-# empezamos un contador así vamos contando las líneas para poder
-# saber dónde está cada error
-linea_actual = 1
+    with open(nombre_archivo, "r", encoding="utf-8") as archivo:
 
-# no termina el programa hasta que se ponga SALIR
-while True:
+        datos = json.load(archivo)
 
-    linea = input(f"[{linea_actual}] > ")
+    return datos["casos"]
 
-    if linea.upper() == "SALIR":
-        print("\nFin del programa.")
-        break
 
-    # primero vemos si no hay algun caracter que no pertenezca
+# toda la lógica del análisis quedó acá para no repetir código
+def analizar_linea(linea, linea_actual):
+
+    # primero vemos si hay caracteres que no pertenecen al lenguaje
     simbolos_invalidos = verificar_alfabeto(linea)
 
-    # si aparece un simbolo no valido, mostramos el error
     for simbolo in simbolos_invalidos:
         errores.error_simbolo(simbolo, linea_actual)
 
-    # es más que nada por los casos con los actuadores.atributo
-    # esto los separa así vemos si está bien escrito el actuador y el atributo
+    # separamos la línea en tokens
     lista_tokens = tokenizar(linea)
 
     print("\nTokens encontrados:\n")
@@ -65,26 +53,110 @@ while True:
 
         token = clasificar_token(token_original)
 
-        # si encontramos un comentario, lo mostramos y dejamos de analizar
-        # porque el resto de la línea ya forma parte del comentario
+        # si aparece un comentario, mostramos el token y dejamos de analizar
         if token == "TOKEN_COMENTARIO":
+
             print(f"• {token}  →  {token_original}")
             break
 
         elif token is not None:
+
             print(f"• {token}")
 
         else:
-            # si no pudimos clasificar el token, intentamos averiguar qué tipo de error es
+
+            # si no reconocimos el token intentamos averiguar el error
             tipo = tipo_error(token_original)
+
             funcion_error = ERRORES.get(tipo)
 
             if funcion_error is not None:
+
                 funcion_error(token_original, linea_actual)
+
             else:
+
                 errores.error_token(token_original, linea_actual)
 
     print()
-    
-    # pasamos a la siguiente línea ingresada por el usuario
-    linea_actual += 1
+
+
+# muestra el encabezado del programa
+def encabezado():
+
+    print("=" * 60)
+    print("SMART HOME LEXER".center(60))
+    print("Analizador Léxico".center(60))
+    print("=" * 60)
+
+    print()
+
+
+# INICIO DEL PROGRAMA
+encabezado()
+
+print("1 - Modo interactivo")
+print("2 - Ejecutar pruebas JSON")
+print()
+
+opcion = input("Opción: ")
+
+linea_actual = 1
+
+# modo normal: el usuario escribe línea por línea
+if opcion == "1":
+
+    print()
+    print("Ingrese código Smart Home.")
+    print("Escriba SALIR para finalizar.")
+    print()
+
+    while True:
+
+        linea = input(f"[{linea_actual}] > ")
+
+        if linea.upper() == "SALIR":
+
+            print("\nFin del programa.")
+            break
+
+        analizar_linea(linea, linea_actual)
+
+        linea_actual += 1
+
+
+# modo pruebas: lee los ejemplos desde un json
+elif opcion == "2":
+
+    print("\nArchivos disponibles:")
+    print(" - pruebas_validas.json")
+    print(" - pruebas_invalidas.json")
+
+    archivo = input("\nIngrese el archivo JSON: ")
+
+    try:
+
+        lineas = leer_json(archivo)
+
+        for linea in lineas:
+
+            print(f"\n[{linea_actual}] > {linea}")
+
+            analizar_linea(linea, linea_actual)
+
+            linea_actual += 1
+
+        print("Fin de las pruebas.")
+
+    except FileNotFoundError:
+
+        print("No se encontró el archivo.")
+
+    except Exception as error:
+
+        print(f"Error al leer el JSON: {error}")
+
+
+else:
+
+    print("Opción inválida.")
