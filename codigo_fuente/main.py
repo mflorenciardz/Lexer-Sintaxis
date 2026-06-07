@@ -158,9 +158,13 @@ elif opcion == "2":
 
         print("Fin de las pruebas.")
 
+        input("\nPresione ENTER para cerrar...")
+
     except FileNotFoundError:
 
         print("No se encontró el archivo.")
+
+        input("\nPresione ENTER para cerrar...")
 
     except Exception as error:
 
