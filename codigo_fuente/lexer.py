@@ -54,8 +54,6 @@ def es_actuador(token):
 def es_id_valido(texto):
     if not texto:
         return False
-    if texto[0].isdigit():
-        return False
     for c in texto:
         if not (c.isalpha() or c.isdigit() or c == "_"):
             return False
@@ -318,7 +316,7 @@ def clasificar_token(token):
         
         elif es_id_valido(id_parte):
 
-            return f"TOKEN_ACTUADOR({prefijo.upper()}{id_parte.upper()})"
+            return f"TOKEN_{token.upper()}"
         
         else:
 

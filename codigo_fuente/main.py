@@ -1,7 +1,7 @@
-# acá no se analiza nada, sino que le va pasando el trabajo al lexer
-# y se muestran los resultados
-
-import json
+# buscamos automáticamente la carpeta principal del proyecto para que
+# el programa encuentre los archivos aunque se ejecute desde otro lugar
+from pathlib import Path
+BASE = Path(__file__).parent.parent
 
 from lexer import (
     tokenizar,
@@ -25,15 +25,27 @@ ERRORES = {
 }
 
 
-# lee un archivo json y devuelve la lista de casos de prueba
-def leer_json(nombre_archivo):
+# lee un archivo .smart y devuelve todas sus líneas
+def leer_archivo(nombre_archivo):
 
-    with open(nombre_archivo, "r", encoding="utf-8") as archivo:
+    if not nombre_archivo.endswith(".smart"):
+        nombre_archivo += ".smart"
 
-        datos = json.load(archivo)
+    ruta = BASE / "pruebas" / nombre_archivo
+    
+    lineas = []
 
-    return datos["casos"]
+    with open(ruta, "r", encoding="utf-8") as archivo:
 
+        for linea in archivo:
+
+            linea = linea.strip()
+
+            if linea != "":
+
+                lineas.append(linea)
+
+    return lineas
 
 # toda la lógica del análisis quedó acá para no repetir código
 def analizar_linea(linea, linea_actual):
@@ -85,7 +97,7 @@ def analizar_linea(linea, linea_actual):
 def encabezado():
 
     print("=" * 60)
-    print("SMART HOME LEXER".center(60))
+    print("SMART HOME".center(60))
     print("Analizador Léxico".center(60))
     print("=" * 60)
 
@@ -96,7 +108,7 @@ def encabezado():
 encabezado()
 
 print("1 - Modo interactivo")
-print("2 - Ejecutar pruebas JSON")
+print("2 - Leer archivo .smart ")
 print()
 
 opcion = input("Opción: ")
@@ -125,28 +137,16 @@ if opcion == "1":
         linea_actual += 1
 
 
-# modo pruebas: lee los ejemplos desde un json
 elif opcion == "2":
 
-    print("\nArchivos disponibles:")
-    print("1 - pruebas_validas.json")
-    print("2 - pruebas_invalidas.json")
+    print("\nIngrese el nombre del archivo.")
+    print("El archivo debe estar dentro de la carpeta 'pruebas'.\n")
 
-    opcion_archivo = input("\nOpción: ")
-
-    if opcion_archivo == "1":
-        archivo = "../pruebas/pruebas_validas.json"
-
-    elif opcion_archivo == "2":
-        archivo = "../pruebas/pruebas_invalidas.json"
-
-    else:
-        print("Opción inválida.")
-        exit()
+    nombre = input("Archivo: ")
 
     try:
 
-        lineas = leer_json(archivo)
+        lineas = leer_archivo(nombre)
 
         for linea in lineas:
 
@@ -156,21 +156,24 @@ elif opcion == "2":
 
             linea_actual += 1
 
-        print("Fin de las pruebas.")
+        print("\nFin del archivo.")
 
         input("\nPresione ENTER para cerrar...")
 
     except FileNotFoundError:
 
-        print("No se encontró el archivo.")
+        print("\nNo se encontró el archivo.")
+        print("Verifique que el archivo exista dentro de la carpeta 'pruebas'.")
 
-        input("\nPresione ENTER para cerrar...")
+        input("\nPresione ENTER para continuar...")
 
     except Exception as error:
 
-        print(f"Error al leer el JSON: {error}")
+        print(f"\nError al leer el archivo: {error}")
 
+        input("\nPresione ENTER para continuar...")
 
 else:
 
     print("Opción inválida.")
+    input("\nPresione ENTER para cerrar...")

@@ -1,8 +1,0 @@
-{
-    "casos": [
-        "WHEN reloj_cocina.HORA >= 25:90 DO foco_living.ESTADO = OFF",
-        "altavoz_sala.EMAIL = usuario@@gmail.com",
-        "altavoz_sala.MENSAJE = \"Buenas noches",
-        "aire_dormitorio.TEMP_OBJ = 150%"
-    ]
-}
