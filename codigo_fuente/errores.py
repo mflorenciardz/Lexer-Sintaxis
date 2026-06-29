@@ -48,4 +48,3 @@ def error_id_invalido(token, linea):
     encabezado_error(linea)
     print(f"Identificador inválido en actuador: '{token}'")
     print(f"  El ID solo puede contener letras, dígitos y guiones bajos,")
-    print(f"  y no puede comenzar con un dígito. Ej: foco_patio, reloj_1er_piso\n")
