@@ -183,11 +183,17 @@ def validar_temperatura(temp):
     if not temp.endswith("°C"):
         return False
     grados = temp[:-2]
-    if grados.startswith("-"):
+    negativo = grados.startswith("-")
+    if negativo:
         grados = grados[1:]
     if not grados.isdigit():
-        return False
-    return True
+        return False 
+    valor = int(grados)
+    if negativo:
+        valor = -valor
+    if (valor < -10) or (valor > 50): 
+        return False 
+    return True 
 
 # Un porcentaje tiene que terminar en % y estar entre 0 y 100.
 def validar_porcentaje(percent):
@@ -240,6 +246,9 @@ def validar_luz(luz):
         return False
     cantidad = luz[:-3]
     if not cantidad.isdigit():
+        return False
+    cantidad = int(cantidad)
+    if (cantidad > 1000) or (cantidad < 0):
         return False
     return True
 
@@ -466,6 +475,9 @@ def tipo_error(token):
 
         return "CADENA"
     
+    if token.endswith("lux"):
+        return "LUZ"
+
     if es_tiempo(token):
         return "TIEMPO"
 

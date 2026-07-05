@@ -44,6 +44,11 @@ def error_tiempo(tiempo, linea):
     print(f"Tiempo inválido: {tiempo}")
     print(f"  Se esperaba un número seguida de una unidad válida: s, m, h. Ej: 30m")
 
+def error_luz(luz, linea):
+    encabezado_error(linea)
+    print(f"Iluminancia inválida: {luz}")
+    print(f"  Se esperaba un valor entre 0 y 1000 lux. Ej: 600lux\n")
+
 def error_actuador_sin_id(token, linea):
     encabezado_error(linea)
     print(f"Actuador sin identificador: '{token}'")

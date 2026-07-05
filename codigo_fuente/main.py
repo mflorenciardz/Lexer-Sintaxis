@@ -20,6 +20,7 @@ ERRORES = {
     "TEMPERATURA": errores.error_temp,
     "PORCENTAJE": errores.error_porcentaje,
     "TIEMPO": errores.error_tiempo,
+    "LUZ": errores.error_luz,
     "CADENA": errores.error_cadena,
     "ACTUADOR_SIN_ID": errores.error_actuador_sin_id,
     "ID_INVALIDO": errores.error_id_invalido,
