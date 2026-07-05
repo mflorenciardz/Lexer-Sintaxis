@@ -34,6 +34,10 @@ SIMBOLOS = {
     '"',
     '.',
     '=',
+    "-",
+    "°",
+    ">",
+    "<",
 }
 
 # Sensores numéricos: admiten operadores de comparación (<, >, <=, >=, ==, !=)
@@ -42,6 +46,7 @@ SENSORES_NUM = {
     "sensor_temp",
     "sensor_humedad",
     "sensor_luz",
+    "sensor_temp_int",
 }
 
 # Sensores booleanos: solo admiten operadores de igualdad (==, !=)
@@ -85,4 +90,26 @@ ATRIBUTOS = {
     "MUTE",
     "MENSAJE",
     "EMAIL",
+    "EMAIL_NOTIF",
+}
+
+COLORES = {
+    "rojo",
+    "verde",
+    "azul",
+    "amarillo",
+    "naranja",
+    "violeta",
+    "rosa",
+    "celeste",
+    "marron",
+    "blanco",
+}
+
+MODOS = {
+    "frio",
+    "calor",
+    "ventilador",
+    "automatico",
+    "seco",
 }

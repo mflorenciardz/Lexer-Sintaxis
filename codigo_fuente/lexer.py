@@ -31,6 +31,13 @@ def es_sensor_num(token):
 def es_sensor_bool(token):
     return token.lower() in tokens.SENSORES_BOOL
 
+# Colores en español 
+def es_color(token):
+    return token.lower() in tokens.COLORES
+
+# Modos del aire acondicionado
+def es_modo(token):
+    return token.lower() in tokens.MODOS
 
 # Devuelve el prefijo que tiene el token, o None si no es un actuador.
 def prefijo_actuador(token):
@@ -88,12 +95,15 @@ def verificar_alfabeto(texto):
     simbolos_invalidos = []
     dentro_cadena = False
 
-    for caracter in texto:
+    for i, caracter in enumerate(texto):
         if caracter == '"':
             dentro_cadena = not dentro_cadena
             continue
         if dentro_cadena:
             continue
+        # A partir de un comentario, el resto de la línea es texto libre y no debe validarse contra el alfabeto del lenguaje
+        if caracter == "/" and i + 1 < len(texto) and texto[i + 1] == "/":
+            break
         if not simbolo_valido(caracter):
             simbolos_invalidos.append(caracter)
 
@@ -191,6 +201,30 @@ def validar_porcentaje(percent):
         return False
     return True
 
+# El tiempo (usado en EVERY) se expresa como un número seguido de una única unidad (s, m, h)
+def validar_tiempo(tiempo):
+    if not tiempo: 
+        return False 
+    unidad = tiempo[-1]
+    if unidad not in ("s", "m", "h"):
+        return False 
+    cantidad = tiempo[:-1]
+    if not cantidad.isdigit():
+        return False
+    return True
+
+# Determina si un token son dígitos seguidos de letras
+def es_tiempo(token):
+    i = 0 
+    while i < len(token) and token[i].isdigit():
+        i += 1 
+    if i == 0:
+        return False 
+    resto = token[i:]
+    if resto == "":
+        return False
+    return resto.isalpha()
+
 # Una cadena tiene que empezar y terminar con comillas.
 def validar_cadena(cadena):
     if not cadena.startswith('"'):
@@ -252,7 +286,7 @@ def tokenizar(linea):
             continue
 
         # El punto separa el nombre del actuador de su atributo
-        if caracter == ".":
+        if caracter == "." and "@" not in actual:
             if actual != "":
                 lista_tokens.append(actual)
                 actual = ""
@@ -295,6 +329,13 @@ def clasificar_token(token):
     if es_sensor_num(token):
 
         return f"TOKEN_SENSOR_NUM({token.upper()})"
+    
+    # Colores en español 
+    if es_color(token):
+        return f"TOKEN_COLOR_VALOR({token.upper()})"
+    
+    if es_modo(token):
+        return f"TOKEN_MODO_VALOR({token.upper()})"
 
     # Sensores booleanos (sensor_humo, sensor_movimiento)
     if es_sensor_bool(token):
@@ -354,6 +395,8 @@ def clasificar_token(token):
         return "TOKEN_TEMPERATURA"
     if validar_porcentaje(token):
         return "TOKEN_PORCENTAJE"
+    if validar_tiempo(token):
+        return "TOKEN_TIEMPO"
     if validar_cadena(token):
         return "TOKEN_CADENA"
     if validar_luz(token):
@@ -372,7 +415,7 @@ def clasificar_token(token):
     # Atributos de actuadores (ESTADO, BRILLO, COLOR, etc.)
     if es_atributo(token):
 
-        return f"TOKEN_{token.upper()}"
+        return f"TOKEN_ATRIBUTO{token.upper()}"
 
     return None
 
@@ -422,5 +465,8 @@ def tipo_error(token):
     if token.startswith('"') or token.endswith('"'):
 
         return "CADENA"
+    
+    if es_tiempo(token):
+        return "TIEMPO"
 
     return "TOKEN"

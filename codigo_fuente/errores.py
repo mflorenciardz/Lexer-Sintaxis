@@ -39,6 +39,11 @@ def error_porcentaje(percent, linea):
     encabezado_error(linea)
     print(f"Porcentaje inválido: {percent}\n")
 
+def error_tiempo(tiempo, linea): 
+    encabezado_error(linea)
+    print(f"Tiempo inválido: {tiempo}")
+    print(f"  Se esperaba un número seguida de una unidad válida: s, m, h. Ej: 30m")
+
 def error_actuador_sin_id(token, linea):
     encabezado_error(linea)
     print(f"Actuador sin identificador: '{token}'")

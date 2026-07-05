@@ -19,11 +19,11 @@ ERRORES = {
     "FECHA": errores.error_fecha,
     "TEMPERATURA": errores.error_temp,
     "PORCENTAJE": errores.error_porcentaje,
+    "TIEMPO": errores.error_tiempo,
     "CADENA": errores.error_cadena,
     "ACTUADOR_SIN_ID": errores.error_actuador_sin_id,
     "ID_INVALIDO": errores.error_id_invalido,
 }
-
 
 # lee un archivo .smart y devuelve todas sus líneas
 def leer_archivo(nombre_archivo):
