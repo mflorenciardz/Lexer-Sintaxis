@@ -424,7 +424,7 @@ def clasificar_token(token):
     # Atributos de actuadores (ESTADO, BRILLO, COLOR, etc.)
     if es_atributo(token):
 
-        return f"TOKEN_ATRIBUTO{token.upper()}"
+        return f"TOKEN_ATRIBUTO_{token.upper()}"
 
     return None
 

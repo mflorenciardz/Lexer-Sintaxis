@@ -110,6 +110,7 @@ MODOS = {
     "frio",
     "calor",
     "ventilador",
+    "vent",
     "automatico",
     "seco",
 }

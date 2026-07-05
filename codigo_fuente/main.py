@@ -10,6 +10,8 @@ from lexer import (
     verificar_alfabeto
 )
 
+from parser import Parser
+
 import errores
 
 # relaciona cada tipo de error con la función que lo muestra
@@ -33,7 +35,7 @@ def leer_archivo(nombre_archivo):
         nombre_archivo += ".smart"
 
     ruta = BASE / "pruebas" / nombre_archivo
-    
+
     lineas = []
 
     with open(ruta, "r", encoding="utf-8") as archivo:
@@ -54,11 +56,17 @@ def analizar_linea(linea, linea_actual):
     # primero vemos si hay caracteres que no pertenecen al lenguaje
     simbolos_invalidos = verificar_alfabeto(linea)
 
+    hubo_error = False
+
     for simbolo in simbolos_invalidos:
+
         errores.error_simbolo(simbolo, linea_actual)
+        hubo_error = True
 
     # separamos la línea en tokens
     lista_tokens = tokenizar(linea)
+
+    tokens_parser = []
 
     print("\nTokens encontrados:\n")
 
@@ -66,7 +74,7 @@ def analizar_linea(linea, linea_actual):
 
         token = clasificar_token(token_original)
 
-        # si aparece un comentario, mostramos el token y dejamos de analizar
+        # comentario
         if token == "TOKEN_COMENTARIO":
 
             print(f"• {token}  →  {token_original}")
@@ -74,11 +82,14 @@ def analizar_linea(linea, linea_actual):
 
         elif token is not None:
 
+            tokens_parser.append((token, linea_actual))
+
             print(f"• {token}")
 
         else:
 
-            # si no reconocimos el token intentamos averiguar el error
+            hubo_error = True
+
             tipo = tipo_error(token_original)
 
             funcion_error = ERRORES.get(tipo)
@@ -93,6 +104,7 @@ def analizar_linea(linea, linea_actual):
 
     print()
 
+    return tokens_parser, hubo_error
 
 # muestra el encabezado del programa
 def encabezado():
@@ -124,6 +136,8 @@ if opcion == "1":
     print("Escriba SALIR para finalizar.")
     print()
 
+    tokens_programa = []
+
     while True:
 
         linea = input(f"[{linea_actual}] > ")
@@ -133,10 +147,17 @@ if opcion == "1":
             print("\nFin del programa.")
             break
 
-        analizar_linea(linea, linea_actual)
+        tokens, hubo_error = analizar_linea(linea, linea_actual)
+
+        if not hubo_error:
+
+            tokens_programa.extend(tokens)
+
+            parser = Parser(tokens_programa)
+
+            parser.programa()
 
         linea_actual += 1
-
 
 elif opcion == "2":
 
@@ -149,16 +170,31 @@ elif opcion == "2":
 
         lineas = leer_archivo(nombre)
 
+        tokens_programa = []
+
         for linea in lineas:
 
             print(f"\n[{linea_actual}] > {linea}")
 
-            analizar_linea(linea, linea_actual)
+            tokens, hubo_error = analizar_linea(linea, linea_actual)
+
+            if not hubo_error:
+
+                tokens_programa.extend(tokens)
 
             linea_actual += 1
 
-        print("\nFin del archivo.")
+        try:
 
+            parser = Parser(tokens_programa)
+
+            parser.programa()
+
+        except SyntaxError as error:
+
+            print(f"\n{error}")
+
+        print("\nFin del archivo.")
         input("\nPresione ENTER para cerrar...")
 
     except FileNotFoundError:

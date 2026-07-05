@@ -1,4 +1,3 @@
-from tokens import PREFIJO_ACTUADORES
 
 class Parser:
 
@@ -7,56 +6,112 @@ class Parser:
         self.tokens = tokens      # lista de tokens que produjo el lexer
         self.posicion = 0         # empezamos leyendo el primer token
 
+        self.errores = []
+
     def token_actual(self):
-        if self.posicion > len(self.tokens): #Para evitar errores de posiciones fuera de listado
-            return self.tokens[self.posicion]
+        if self.posicion < len(self.tokens): #Para evitar errores de posiciones fuera de listado
+            return self.tokens[self.posicion][0]
         return None
+
+    def linea_actual(self):
+
+        if self.posicion < len(self.tokens):
+
+            return self.tokens[self.posicion][1]
+
+        return "desconocida"
 
     def avanzar(self):
         self.posicion += 1
 
+    def error(self, mensaje):
+
+        self.errores.append(mensaje)
+
+    def recuperar(self):
+
+        sincronizacion = (
+            "TOKEN_END",
+            "TOKEN_ELSE",
+            "TOKEN_WHEN",
+            "TOKEN_IF",
+            "TOKEN_EVERY",
+        )
+
+        while (
+            self.token_actual() is not None
+            and self.token_actual() not in sincronizacion
+        ):
+            self.avanzar()
+
     #ve si el token actual es el esperado
     def coincidir(self, esperado):
-        if self.token_actual == esperado:
+
+        if self.token_actual() == esperado:
+
             self.avanzar()
+
         else:
-            raise SyntaxError(f"Se esperaba {esperado} y se encontró {self.token_actual()}")
-    #Raise es detener el programa por un error
+
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"se esperaba {esperado} y se encontró {self.token_actual()}."
+            )
+
+            self.avanzar()
+
+            self.recuperar()
 
     def programa(self):
-        self.bloque() #pinkxel → bloque 
 
-        if self.token_actual is not None:
-            raise SyntaxError(f"Hay más tokens fuera del bloque.")
+        while self.comienza_instruccion():
+
+            self.instruccion()
+
+        if self.token_actual() is not None:
+
+            self.error(
+                f"Línea {self.linea_actual()}: hay más tokens fuera del programa."
+            )
+
+        if self.errores:
+
+            print("\nErrores sintácticos encontrados:\n")
+
+            for error in self.errores:
+
+                print("•", error)
+
+        else:
+
+            print("\n✓ Análisis sintáctico exitoso.")
     
     def comienza_instruccion(self):
 
         token = self.token_actual()
 
-        if token == "TOKEN_WHEN":
-            return True
+        if token is None:
+            return False
 
-        if token == "TOKEN_IF":
-            return True
+        # Ignorar comentarios
+        if token == "TOKEN_COMENTARIO":
 
-        if token == "TOKEN_EVERY":
-            return True
+            self.avanzar()
 
-        if (
-            token.startswith("TOKEN_FOCO_")
-            or token.startswith("TOKEN_AIRE_")
-            or token.startswith("TOKEN_PERSIANA_")
-            or token.startswith("TOKEN_CERRADURA_")
-            or token.startswith("TOKEN_RELOJ_")
-            or token.startswith("TOKEN_ALTAVOZ_")
-            or token.startswith("TOKEN_ALARMA_")
+            return self.comienza_instruccion()
+
+        if token in (
+            "TOKEN_WHEN",
+            "TOKEN_IF",
+            "TOKEN_EVERY",
         ):
             return True
 
-        return False
+        return self.es_actuador()
 
     def bloque(self):
-        self.instruccion() #bloque → instruccion 
+
+        self.instruccion()
 
         while self.comienza_instruccion():
 
@@ -79,7 +134,15 @@ class Parser:
             self.asignacion()
 
         else:
-            raise SyntaxError(f"No se puede comenzar una instrucción con {self.token_actual()}")
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"no se puede comenzar una instrucción con {token}."
+            )
+
+            self.recuperar()
+
+            if self.token_actual is not None:
+                self.avanzar()
 
     def when(self):
 
@@ -102,7 +165,11 @@ class Parser:
 
         self.bloque()
 
-        self.bloque()
+        if self.token_actual() == "TOKEN_ELSE":
+
+            self.coincidir("TOKEN_ELSE")
+
+            self.bloque()
 
         self.coincidir("TOKEN_END")
 
@@ -110,7 +177,7 @@ class Parser:
 
         self.coincidir("TOKEN_EVERY")
 
-        self.tiempo()
+        self.tiempo() 
 
         self.coincidir("TOKEN_DO")
 
@@ -120,32 +187,486 @@ class Parser:
 
     def condicion(self):
 
-        ...
+        if self.token_actual() == "TOKEN_NOT":
 
-    def expresion(self):
+            self.coincidir("TOKEN_NOT")
 
-        ...
+            self.condicion()
 
-    def expresion_num(self):
+        else:
 
-        ...
+            self.expresion()
 
-    def expresion_bool(self):
+            if self.token_actual() == "TOKEN_AND":
 
-        ...
+                self.coincidir("TOKEN_AND")
+
+                self.condicion()
+
+            elif self.token_actual() == "TOKEN_OR":
+
+                self.coincidir("TOKEN_OR")
+
+                self.condicion()
+
+    def es_actuador(self):
+
+        token = self.token_actual()
+
+        return (
+            token is not None and (
+                token.startswith("TOKEN_FOCO_")
+                or token.startswith("TOKEN_AIRE_")
+                or token.startswith("TOKEN_PERSIANA_")
+                or token.startswith("TOKEN_CERRADURA_")
+                or token.startswith("TOKEN_RELOJ_")
+                or token.startswith("TOKEN_ALTAVOZ_")
+                or token.startswith("TOKEN_ALARMA_")
+            )
+        )
+    
+    def asignacion(self):
+
+        atributo = self.actuador()
+
+        if self.atributo is None:
+            return
+
+        self.coincidir("TOKEN_ASIGNACION")
+
+        info = self.informacion_atributo(atributo)
+
+        if info is None:
+
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"Atributo desconocido: {atributo}."
+            )
+
+            self.recuperar()
+
+            return
+
+        self.esperar_valor(info["valor"])
+
+    def actuador(self):
+
+        if not self.es_actuador():
+
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"Se esperaba un actuador y se encontró {self.token_actual()}."
+            )
+
+            self.recuperar()
+
+            return None
+
+        self.avanzar()
+
+        self.coincidir("TOKEN_PUNTO")
+
+        return self.atributo()
+
+
+    def atributo(self):
+
+        token = self.token_actual()
+
+        atributos = (
+            "TOKEN_ATRIBUTO_ESTADO",
+            "TOKEN_ATRIBUTO_BRILLO",
+            "TOKEN_ATRIBUTO_COLOR",
+            "TOKEN_ATRIBUTO_MODO",
+            "TOKEN_ATRIBUTO_TEMP_OBJ",
+            "TOKEN_ATRIBUTO_TEMP_ACT",
+            "TOKEN_ATRIBUTO_POSICION",
+            "TOKEN_ATRIBUTO_ACTIVADA",
+            "TOKEN_ATRIBUTO_HORA",
+            "TOKEN_ATRIBUTO_FECHA",
+            "TOKEN_ATRIBUTO_VOLUMEN",
+            "TOKEN_ATRIBUTO_MUTE",
+            "TOKEN_ATRIBUTO_MENSAJE",
+            "TOKEN_ATRIBUTO_EMAIL_NOTIF",
+        )
+
+        if token in atributos:
+
+            self.avanzar()
+
+            return token
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un atributo y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
+    
+    def informacion_atributo(self, atributo):
+
+        atributos = {
+
+            "TOKEN_ATRIBUTO_ESTADO": {
+                "operador": "bool",
+                "valor": ("TOKEN_TRUE", "TOKEN_FALSE", "TOKEN_ON", "TOKEN_OFF"),
+            },
+
+            "TOKEN_ATRIBUTO_ACTIVADA": {
+                "operador": "bool",
+                "valor": ("TOKEN_TRUE", "TOKEN_FALSE", "TOKEN_ON", "TOKEN_OFF"),
+            },
+
+            "TOKEN_ATRIBUTO_MUTE": {
+                "operador": "bool",
+                "valor": ("TOKEN_TRUE", "TOKEN_FALSE", "TOKEN_ON", "TOKEN_OFF"),
+            },
+
+            "TOKEN_ATRIBUTO_TEMP_OBJ": {
+                "operador": "comp",
+                "valor": ("TOKEN_TEMPERATURA",),
+            },
+
+            "TOKEN_ATRIBUTO_TEMP_ACT": {
+                "operador": "comp",
+                "valor": ("TOKEN_TEMPERATURA",),
+            },
+
+            "TOKEN_ATRIBUTO_POSICION": {
+                "operador": "comp",
+                "valor": ("TOKEN_PORCENTAJE",),
+            },
+
+            "TOKEN_ATRIBUTO_BRILLO": {
+                "operador": "comp",
+                "valor": ("TOKEN_PORCENTAJE",),
+            },
+
+            "TOKEN_ATRIBUTO_VOLUMEN": {
+                "operador": "comp",
+                "valor": ("TOKEN_PORCENTAJE",),
+            },
+
+            "TOKEN_ATRIBUTO_COLOR": {
+                "operador": "bool",
+                "valor": ("TOKEN_COLOR_VALOR",),
+            },
+
+            "TOKEN_ATRIBUTO_MODO": {
+                "operador": "bool",
+                "valor": ("TOKEN_MODO_VALOR",),
+            },
+
+            "TOKEN_ATRIBUTO_EMAIL_NOTIF": {
+                "operador": "bool",
+                "valor": ("TOKEN_EMAIL",),
+            },
+
+            "TOKEN_ATRIBUTO_MENSAJE": {
+                "operador": "bool",
+                "valor": ("TOKEN_CADENA",),
+            },
+
+            "TOKEN_ATRIBUTO_HORA": {
+                "operador": "comp",
+                "valor": ("TOKEN_HORA",),
+            },
+
+            "TOKEN_ATRIBUTO_FECHA": {
+                "operador": "comp",
+                "valor": ("TOKEN_FECHA",),
+            },
+
+        }
+
+        return atributos.get(atributo)
+    
+    def informacion_sensor(self, sensor):
+
+        sensores = {
+
+            "TOKEN_SENSOR_NUM(SENSOR_TEMP_INT)": {
+                "valor": ("TOKEN_TEMPERATURA",),
+            },
+
+            "TOKEN_SENSOR_NUM(SENSOR_HUMEDAD)": {
+                "valor": ("TOKEN_PORCENTAJE",),
+            },
+
+            "TOKEN_SENSOR_NUM(SENSOR_LUZ)": {
+                "valor": ("TOKEN_LUZ",),
+            },
+
+        }
+
+        return sensores.get(sensor)
+    
+    def booleano(self):
+
+        token = self.token_actual()
+
+        if token in (
+            "TOKEN_TRUE",
+            "TOKEN_FALSE",
+            "TOKEN_ON",
+            "TOKEN_OFF",
+        ):
+
+            self.avanzar()
+
+            return token
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un valor booleano y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
+
+
+    def operador_comp(self):
+
+        token = self.token_actual()
+
+        if token in (
+            "TOKEN_IGUALDAD",
+            "TOKEN_DISTINTO",
+            "TOKEN_MAYOR",
+            "TOKEN_MENOR",
+            "TOKEN_MAYOR_IGUAL",
+            "TOKEN_MENOR_IGUAL",
+        ):
+
+            self.avanzar()
+
+            return token
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un operador de comparación y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
+
+
+    def operador_bool(self):
+
+        token = self.token_actual()
+
+        if token in (
+            "TOKEN_IGUALDAD",
+            "TOKEN_DISTINTO",
+        ):
+
+            self.avanzar()
+
+            return token
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un operador booleano y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
+
 
     def sensor_num(self):
 
-        ...
+        token = self.token_actual()
+
+        if token is not None and token.startswith("TOKEN_SENSOR_NUM"):
+
+            self.avanzar()
+
+            return token
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un sensor numérico y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
 
     def sensor_bool(self):
 
-        ...
+        token = self.token_actual()
 
-    def valor(self):
+        if token is not None and token.startswith("TOKEN_SENSOR_BOOL"):
 
-        ...
+            self.avanzar()
 
-    def asignacion(self):
+            return token
 
-        ...
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un sensor booleano y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
+
+    def esperar_valor(self, permitidos):
+
+        token = self.token_actual()
+
+        if token is None:
+
+            self.error(
+                f"Línea {self.linea_actual()}: Se esperaba un valor."
+            )
+
+            self.recuperar()
+
+            return None
+
+        for permitido in permitidos:
+
+            if (
+                token == permitido
+                or token.startswith(permitido + "(")
+            ):
+
+                self.avanzar()
+
+                return token
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba uno de {permitidos} y se encontró {token}."
+        )
+
+        self.recuperar()
+
+        return None
+
+    def tiempo(self):
+
+        if self.token_actual() == "TOKEN_TIEMPO":
+
+            self.avanzar()
+
+            return
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba un tiempo y se encontró {self.token_actual()}."
+        )
+
+        self.recuperar()
+
+
+    def expresion_num(self):
+
+        sensor = self.sensor_num()
+
+        if sensor is None:
+            return
+
+        if self.operador_comp() is None:
+            return
+
+        info = self.informacion_sensor(sensor)
+
+        if info is None:
+
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"Sensor desconocido: {sensor}."
+            )
+
+            self.recuperar()
+
+            return
+
+        self.esperar_valor(info["valor"])
+
+
+    def expresion_bool(self):
+
+        if self.sensor_bool() is None:
+            return
+
+        if self.operador_bool() is None:
+            return
+
+        self.booleano()
+
+
+    def expresion(self):
+
+        token = self.token_actual()
+
+        if token is None:
+
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                "Se esperaba una expresión."
+            )
+
+            self.recuperar()
+
+            return
+
+        if token.startswith("TOKEN_SENSOR_NUM"):
+
+            self.expresion_num()
+
+            return
+
+        if token.startswith("TOKEN_SENSOR_BOOL"):
+
+            self.expresion_bool()
+
+            return
+
+        if self.es_actuador():
+
+            atributo = self.actuador()
+
+            if atributo is None:
+                return
+
+            info = self.informacion_atributo(atributo)
+
+            if info is None:
+
+                self.error(
+                    f"Línea {self.linea_actual()}: "
+                    f"Atributo desconocido: {atributo}."
+                )
+
+                self.recuperar()
+
+                return
+
+            if info["operador"] == "bool":
+
+                if self.operador_bool() is None:
+                    return
+
+            else:
+
+                if self.operador_comp() is None:
+                    return
+
+            self.esperar_valor(info["valor"])
+
+            return
+
+        self.error(
+            f"Línea {self.linea_actual()}: "
+            f"Se esperaba una expresión y se encontró {token}."
+        )
+
+        self.recuperar()
