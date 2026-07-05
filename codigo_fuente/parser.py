@@ -82,9 +82,13 @@ class Parser:
 
                 print("•", error)
 
+            return False
+
         else:
 
             print("\n✓ Análisis sintáctico exitoso.")
+
+            return True
     
     def comienza_instruccion(self):
 

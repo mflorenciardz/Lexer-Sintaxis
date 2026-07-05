@@ -1,6 +1,8 @@
 # buscamos automáticamente la carpeta principal del proyecto para que
 # el programa encuentre los archivos aunque se ejecute desde otro lugar
 from pathlib import Path
+from traductorHTML import traducir
+
 BASE = Path(__file__).parent.parent
 
 from lexer import (
@@ -184,17 +186,14 @@ elif opcion == "2":
 
             linea_actual += 1
 
-        try:
+        parser = Parser(tokens_programa)
 
-            parser = Parser(tokens_programa)
+        if parser.programa():
 
-            parser.programa()
-
-        except SyntaxError as error:
-
-            print(f"\n{error}")
+            traducir(lineas, nombre)
 
         print("\nFin del archivo.")
+
         input("\nPresione ENTER para cerrar...")
 
     except FileNotFoundError:
