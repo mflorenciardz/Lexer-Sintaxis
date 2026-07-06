@@ -1,3 +1,5 @@
+import shutil
+
 from pathlib import Path
 
 import sys
@@ -286,7 +288,7 @@ body{
     html.append("</div>")
 
 
-    html.append('<img class="logoPINXEL" src="../logoHTML/logoPINKXEL.png">')
+    html.append('<img class="logoPINXEL" src="logoPINKXEL.png">')
 
     html.append("</div>")
 
@@ -477,6 +479,15 @@ def traducir(lineas, nombre_archivo):
     with open(ruta, "w", encoding="utf-8") as archivo:
 
         archivo.write("\n".join(html))
+
+    # Copiar el logo a la carpeta HTML
+
+    logo_origen = BASE / "logoHTML" / "logoPINKXEL.png"
+    logo_destino = BASE / "HTML" / "logoPINKXEL.png"
+
+    if logo_origen.exists():
+
+        shutil.copy2(logo_origen, logo_destino)
 
     print(f"\n✓ Archivo HTML generado correctamente.")
     print(f"Nombre del archivo: {ruta.name}")
