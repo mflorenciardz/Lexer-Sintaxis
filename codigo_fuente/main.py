@@ -52,6 +52,40 @@ def leer_archivo(nombre_archivo):
 
     return lineas
 
+def listar_archivos():
+
+    carpeta = BASE / "pruebas"
+
+    archivos = sorted(carpeta.glob("*.smart"))
+
+    if len(archivos) == 0:
+
+        print("\nNo hay archivos .smart en la carpeta pruebas.")
+
+        return None
+
+    print("\nArchivos disponibles:\n")
+
+    for i, archivo in enumerate(archivos, start=1):
+
+        print(f"{i} - {archivo.stem}")
+
+    while True:
+
+        try:
+
+            opcion = int(input("\nSeleccione un archivo: "))
+
+            if 1 <= opcion <= len(archivos):
+
+                return archivos[opcion - 1].name
+
+            print("Opción inválida.")
+
+        except ValueError:
+
+            print("Ingrese un número.")
+
 # toda la lógica del análisis quedó acá para no repetir código
 def analizar_linea(linea, linea_actual):
 
@@ -163,10 +197,13 @@ if opcion == "1":
 
 elif opcion == "2":
 
-    print("\nIngrese el nombre del archivo.")
-    print("El archivo debe estar dentro de la carpeta 'pruebas'.\n")
+    nombre = listar_archivos()
 
-    nombre = input("Archivo: ")
+    if nombre is None:
+
+        input("\nPresione ENTER para continuar...")
+
+        exit()
 
     try:
 

@@ -81,21 +81,39 @@ def obtener_sensor(linea):
 
     partes = linea.split()
 
-    if len(partes) < 4:
+    sensores = []
 
-        return None
+    i = 0
 
-    nombre = partes[1]
-    operador = partes[2]
-    valor = partes[3]
+    while i < len(partes) - 2:
 
-    return {
+        nombre = partes[i]
 
-        "nombre": nombre,
-        "operador": operador,
-        "valor": valor
+        operador = partes[i + 1]
 
-    }
+        valor = partes[i + 2]
+
+        if (
+            nombre.startswith("sensor_")
+            or nombre.startswith("reloj_")
+            or "." in nombre
+        ) and operador in ("==", "!=", "<", ">", "<=", ">="):
+
+            sensores.append({
+
+                "nombre": nombre,
+                "operador": operador,
+                "valor": valor
+
+            })
+
+            i += 3
+
+        else:
+
+            i += 1
+
+    return sensores
 
 # ACTUADORES
 
@@ -119,11 +137,12 @@ def obtener_actuador(linea):
 
     return {
 
-        "nombre": actuador.strip(),
-        "atributo": atributo.strip(),
-        "valor": derecha
+        "nombre": actuador.strip().lower(),
+        "atributo": atributo.strip().lower(),
+        "valor": derecha.upper()
 
     }
+
 
 # EMAIL
 
@@ -296,15 +315,19 @@ def agregar_sensores(html, sensores):
 
         html.append("<p>No se encontraron sensores.</p>")
 
-    for sensor in sensores:
+    for nombre, valores in sensores.items():
 
-        nombre = sensor["nombre"].replace("_", " ").title()
+        titulo = nombre.replace("_", " ").replace(".", " ").title()
 
-        html.append(f"<h2>{nombre}</h2>")
+        html.append(f"<h2>{titulo}</h2>")
 
-        html.append(
-            f"<p>{sensor['operador']} {sensor['valor']}</p>"
-        )
+        html.append("<ul>")
+
+        for valor in valores:
+
+            html.append(f"<li>{valor}</li>")
+
+        html.append("</ul>")
 
     html.append("</div>")
 
@@ -323,20 +346,27 @@ def agregar_actuadores(html, actuadores):
 
         html.append("<ul>")
 
-        for atributo, valor in actuadores[nombre].items():
+        for atributo, valores in actuadores[nombre].items():
 
-            atributo = atributo.replace("_", " ").title()
+            atributo_html = atributo.replace("_", " ").title()
 
-            if atributo.lower() == "email notif":
+            if atributo == "email_notif":
 
-                html.append(
-                    f"<li>{html_email(valor)}</li>"
-                )
+                html.append(f"<li><b>{atributo_html}:</b></li>")
+                html.append("<ul>")
+
+                for email in valores:
+
+                    html.append(f"<li>{html_email(email)}</li>")
+
+                html.append("</ul>")
 
             else:
 
+                texto = " / ".join(valores)
+
                 html.append(
-                    f"<li><b>{atributo}:</b> {valor}</li>"
+                    f"<li><b>{atributo_html}:</b> {texto}</li>"
                 )
 
         html.append("</ul>")
@@ -349,7 +379,7 @@ def agregar_actuadores(html, actuadores):
 # TRADUCCIÓN PRINCIPAL
 def traducir(lineas, nombre_archivo):
 
-    sensores = []
+    sensores = {}
 
     actuadores = {}
 
@@ -373,14 +403,23 @@ def traducir(lineas, nombre_archivo):
 
             if es_when(linea) or es_if(linea):
 
-                sensor = obtener_sensor(linea)
+                lista_sensores = obtener_sensor(linea)
 
-                if sensor is not None:
+                for sensor in lista_sensores:
 
-                    sensores.append(sensor)
+                    nombre = sensor["nombre"]
+
+                    if nombre not in sensores:
+
+                        sensores[nombre] = []
+
+                    texto = f'{sensor["operador"]} {sensor["valor"]}'
+
+                    if texto not in sensores[nombre]:
+
+                        sensores[nombre].append(texto)
 
             continue
-
 
         actuador = obtener_actuador(linea)
 
@@ -398,7 +437,13 @@ def traducir(lineas, nombre_archivo):
 
             actuadores[nombre] = {}
 
-        actuadores[nombre][atributo] = valor
+        if atributo not in actuadores[nombre]:
+
+            actuadores[nombre][atributo] = []
+
+        if valor not in actuadores[nombre][atributo]:
+
+            actuadores[nombre][atributo].append(valor)
 
 
     html = []
@@ -418,10 +463,16 @@ def traducir(lineas, nombre_archivo):
 
     BASE = Path(__file__).parent.parent
 
-    ruta = BASE / "pruebas" / Path(nombre_archivo).with_suffix(".html")
+    carpeta_html = BASE / "HTML"
+
+    carpeta_html.mkdir(exist_ok=True)
+
+    ruta = carpeta_html / Path(nombre_archivo).with_suffix(".html")
 
     with open(ruta, "w", encoding="utf-8") as archivo:
 
         archivo.write("\n".join(html))
 
-    print(f"\nArchivo HTML generado: {ruta}")
+    print(f"\n✓ Archivo HTML generado correctamente.")
+    print(f"Nombre del archivo: {ruta.name}")
+    print("Se guardó dentro de la carpeta 'HTML'.")
