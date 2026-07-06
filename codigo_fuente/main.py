@@ -3,7 +3,12 @@
 from pathlib import Path
 from traductorHTML import traducir
 
-BASE = Path(__file__).parent.parent
+import sys
+
+if getattr(sys, "frozen", False):
+    BASE = Path(sys.executable).parent.parent
+else:
+    BASE = Path(__file__).parent.parent
 
 from lexer import (
     tokenizar,
@@ -194,7 +199,7 @@ if opcion == "1":
             parser.programa()
 
         linea_actual += 1
-
+#modo con archivo
 elif opcion == "2":
 
     nombre = listar_archivos()
@@ -232,13 +237,6 @@ elif opcion == "2":
         print("\nFin del archivo.")
 
         input("\nPresione ENTER para cerrar...")
-
-    except FileNotFoundError:
-
-        print("\nNo se encontró el archivo.")
-        print("Verifique que el archivo exista dentro de la carpeta 'pruebas'.")
-
-        input("\nPresione ENTER para continuar...")
 
     except Exception as error:
 

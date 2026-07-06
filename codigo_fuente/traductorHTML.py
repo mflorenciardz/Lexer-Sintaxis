@@ -1,5 +1,12 @@
 from pathlib import Path
 
+import sys
+
+if getattr(sys, "frozen", False):
+    BASE = Path(sys.executable).parent.parent
+else:
+    BASE = Path(__file__).parent.parent
+
 # DATOS DEL GRUPO
 PROFESOR = "Vigil, Rodrigo"
 
@@ -460,8 +467,6 @@ def traducir(lineas, nombre_archivo):
     html.append("</body>")
     html.append("</html>")
 
-
-    BASE = Path(__file__).parent.parent
 
     carpeta_html = BASE / "HTML"
 
