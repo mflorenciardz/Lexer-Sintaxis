@@ -1,3 +1,15 @@
+ATRIBUTOS_POR_TIPO_ACTUADOR = {
+    "TOKEN_FOCO_":      ("TOKEN_ATRIBUTO_ESTADO", "TOKEN_ATRIBUTO_BRILLO", "TOKEN_ATRIBUTO_COLOR"),
+    "TOKEN_AIRE_":      ("TOKEN_ATRIBUTO_ESTADO", "TOKEN_ATRIBUTO_MODO", "TOKEN_ATRIBUTO_TEMP_OBJ", "TOKEN_ATRIBUTO_TEMP_ACT"),
+    "TOKEN_PERSIANA_":  ("TOKEN_ATRIBUTO_POSICION",),
+    "TOKEN_CERRADURA_": ("TOKEN_ATRIBUTO_ESTADO",),
+    "TOKEN_RELOJ_":     ("TOKEN_ATRIBUTO_HORA", "TOKEN_ATRIBUTO_FECHA"),
+    "TOKEN_ALTAVOZ_":   ("TOKEN_ATRIBUTO_ESTADO", "TOKEN_ATRIBUTO_VOLUMEN", "TOKEN_ATRIBUTO_MUTE",
+                         "TOKEN_ATRIBUTO_MENSAJE", "TOKEN_ATRIBUTO_EMAIL_NOTIF"),
+    "TOKEN_ALARMA_":    ("TOKEN_ATRIBUTO_ESTADO", "TOKEN_ATRIBUTO_ACTIVADA"),
+}
+
+ATRIBUTOS_SOLO_LECTURA = ("TOKEN_ATRIBUTO_TEMP_ACT",)
 
 class Parser:
 
@@ -229,11 +241,32 @@ class Parser:
             )
         )
     
+    def tipo_de_actuador(self, token_actuador): 
+        
+        if token_actuador is None: 
+            return None 
+        
+        for prefijo in ATRIBUTOS_POR_TIPO_ACTUADOR:
+
+            if token_actuador.startswith(prefijo):
+
+                return prefijo 
+        
+        return None 
+
     def asignacion(self):
 
         atributo = self.actuador()
 
         if self.atributo is None:
+            return
+
+        if atributo in ATRIBUTOS_SOLO_LECTURA: 
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"el atributo {atributo} es de solo lectura y no puede asignarse"
+            )
+            self.recuperar()
             return
 
         self.coincidir("TOKEN_ASIGNACION")
@@ -254,7 +287,8 @@ class Parser:
         self.esperar_valor(info["valor"])
 
     def actuador(self):
-
+        # guardamos el actuador antes de avanzar
+        token_actuador = self.token_actual() 
         if not self.es_actuador():
 
             self.error(
@@ -270,7 +304,18 @@ class Parser:
 
         self.coincidir("TOKEN_PUNTO")
 
-        return self.atributo()
+        atributo = self.atributo()
+        if atributo is None: 
+            return None 
+
+        tipo = self.tipo_de_actuador(token_actuador)
+        permitidos = ATRIBUTOS_POR_TIPO_ACTUADOR.get(tipo, ())
+        if atributo not in permitidos:
+            self.error(f"Línea {self.linea_actual()}: el atributo {atributo} no corresponde al actuador {token_actuador}.")
+            self.recuperar()
+            return None
+
+        return atributo
 
 
     def atributo(self):
