@@ -1,6 +1,19 @@
-// prueba
+// prueba de temp objeto
 
-WHEN sensor_luz < 400lux DO
-	foco_sala.brillo = 800%
+// válido
+aire_acondicionado.temp_obj = 22°C 
+
+// inválido
+aire_acondicionado.temp_obj = 5°C
+
+// pruebas de temp actual
+
+// válido
+IF aire_acondicionado.temp_act > 45°C THEN 
+	aire_acondicionado.temp_obj = 20°C 
 END
 
+// inválido
+IF aire_acondicionado.temp_act > 60°C THEN 
+	aire_acondicionado.temp_obj = 20°C 
+END

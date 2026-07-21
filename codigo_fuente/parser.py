@@ -9,7 +9,12 @@ ATRIBUTOS_POR_TIPO_ACTUADOR = {
     "TOKEN_ALARMA_":    ("TOKEN_ATRIBUTO_ESTADO", "TOKEN_ATRIBUTO_ACTIVADA"),
 }
 
-ATRIBUTOS_SOLO_LECTURA = ("TOKEN_ATRIBUTO_TEMP_ACT",)
+ATRIBUTOS_SOLO_LECTURA = ("TOKEN_ATRIBUTO_TEMP_ACT", "TOKEN_ATRIBUTO_HORA", "TOKEN_ATRIBUTO_FECHA")
+
+# temp_obj solo admite 16°C a 30°C. Esta validación es semántica y no léxica, porque recién en el parser sabemos a qué atributo corresponde el valor asignado
+RANGOS_ATRIBUTO = {
+    "TOKEN_ATRIBUTO_TEMP_OBJ": (16, 30),
+}
 
 class Parser:
 
@@ -270,7 +275,7 @@ class Parser:
        
        if atributo in ATRIBUTOS_SOLO_LECTURA:
             self.error(f"Línea {self.linea_actual()}: el atributo {atributo} es de solo lectura y no puede asignarse")
-
+            self.recuperar()
             return
        
        self.coincidir("TOKEN_ASIGNACION")
@@ -284,7 +289,11 @@ class Parser:
         # Antes de esperar el valor, miramos cuál es para guardarlo
         
        valor_token = self.token_actual()
+       linea_valor = self.linea_actual()
        self.esperar_valor(info["valor"])
+
+        # Validación semántica: temp_obj tiene un rango más estricto que el que ya validó el lexer (16°C a 30°C)
+       self.validar_rango_atributo(atributo, valor_token, linea_valor)
 
         # Si no hubo errores, guardamos los datos limpios para el HTML
        if token_actuador_completo and valor_token:
@@ -329,7 +338,7 @@ class Parser:
         permitidos = ATRIBUTOS_POR_TIPO_ACTUADOR.get(tipo, ())
         if atributo not in permitidos:
             self.error(f"Línea {self.linea_actual()}: el atributo {atributo} no corresponde al actuador {token_actuador}.")
-
+            self.recuperar()
             return None
 
         return atributo
@@ -580,6 +589,26 @@ class Parser:
         self.recuperar()
 
         return None
+
+    # Verifica que el valor asignado a un atributo respete su rango específico
+    def validar_rango_atributo(self, atributo, valor_token, linea):
+        rango = RANGOS_ATRIBUTO.get(atributo)
+        if rango is None or valor_token is None:
+            return
+        if not (valor_token.startswith("TOKEN_TEMPERATURA(") and valor_token.endswith(")")):
+            return 
+        minimo, maximo = rango 
+        valor_str = valor_token[len("TOKEN_TEMPERATURA("):-1]
+        numero_str = valor_str.replace("°C", "")
+        try:
+            numero = int(numero_str)
+        except ValueError:
+            return
+        if numero < minimo or numero > maximo: 
+            self.error(
+                f"Línea {linea}: el valor {valor_str} está fuera del rango permitido "
+                f"para {atributo} ({minimo}°C a {maximo}°C)."
+            )
 
     def esperar_valor(self, permitidos):
 
