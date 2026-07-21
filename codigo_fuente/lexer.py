@@ -408,21 +408,21 @@ def clasificar_token(token):
 
     # Tipos de datos especiales
     if validar_email(token):
-        return "TOKEN_EMAIL"
+        return f"TOKEN_EMAIL({token})"
     if validar_hora(token):
-        return "TOKEN_HORA"
+        return f"TOKEN_HORA({token})"
     if validar_fecha(token):
-        return "TOKEN_FECHA"
+        return f"TOKEN_FECHA({token})"
     if validar_temperatura(token):
-        return "TOKEN_TEMPERATURA"
+        return f"TOKEN_TEMPERATURA({token})"
     if validar_porcentaje(token):
-        return "TOKEN_PORCENTAJE"
+        return f"TOKEN_PORCENTAJE({token})"
     if validar_tiempo(token):
-        return "TOKEN_TIEMPO"
+        return f"TOKEN_TIEMPO({token})"
     if validar_cadena(token):
-        return "TOKEN_CADENA"
+        return f"TOKEN_CADENA({token})"
     if validar_luz(token):
-        return "TOKEN_LUZ"
+        return f"TOKEN_LUZ({token})"
 
     # Comentario
     if es_comentario(token):

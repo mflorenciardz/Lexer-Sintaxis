@@ -292,8 +292,10 @@ class Parser:
             actuador_nombre = token_actuador_completo.replace("TOKEN_", "").lower()
             atrib_nombre = atributo.replace("TOKEN_ATRIBUTO_", "").lower()
             # Si el valor viene como TOKEN_NUMERO(25) o TOKEN_TRUE, extraemos lo de adentro o el estado
-            val_limpio = valor_token.replace("TOKEN_", "")
-            
+            if "(" in valor_token and valor_token.endswith(")"):
+                val_limpio = valor_token[valor_token.index("(") + 1 : -1]
+            else:
+                val_limpio = valor_token.replace("TOKEN_", "")
             if actuador_nombre not in self.datos_actuadores:
                 self.datos_actuadores[actuador_nombre] = {}
             if atrib_nombre not in self.datos_actuadores[actuador_nombre]:
@@ -615,8 +617,8 @@ class Parser:
 
     def tiempo(self):
 
-        if self.token_actual() == "TOKEN_TIEMPO":
-
+        token = self.token_actual()
+        if token == "TOKEN_TIEMPO" or (token is not None and token.startswith("TOKEN_TIEMPO")):
             self.avanzar()
 
             return
@@ -694,7 +696,10 @@ class Parser:
             elif operador_tok == "TOKEN_MENOR_IGUAL": op_limpio = "<="
             elif operador_tok == "TOKEN_DISTINTO": op_limpio = "!="
             
-            val_limpio = valor_tok.replace("TOKEN_", "") if valor_tok else ""
+            if valor_tok and "(" in valor_tok and valor_tok.endswith(")"):
+                val_limpio = valor_tok[valor_tok.index("(") + 1 : -1]
+            else:
+                val_limpio = valor_tok.replace("TOKEN_", "") if valor_tok else ""
             texto_condicion = f"{op_limpio} {val_limpio}"
             
             if sensor_nombre not in self.datos_sensores:
