@@ -89,7 +89,6 @@ ATRIBUTOS = {
     "VOLUMEN",
     "MUTE",
     "MENSAJE",
-    "EMAIL",
     "EMAIL_NOTIF",
 }
 

@@ -61,6 +61,8 @@ def es_actuador(token):
 def es_id_valido(texto):
     if not texto:
         return False
+    if texto[0].isdigit():
+        return False
     for c in texto:
         if not (c.isalpha() or c.isdigit() or c == "_"):
             return False
@@ -173,7 +175,7 @@ def validar_fecha(fecha):
         return False
     if (mes > 12) or (mes < 1):
         return False
-    if (anno > 2099) or (anno < 1990):
+    if (anno > 2099) or (anno < 1900):
         return False
     return True
 

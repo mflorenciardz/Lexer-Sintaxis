@@ -57,7 +57,7 @@ def error_actuador_sin_id(token, linea):
 def error_id_invalido(token, linea):
     encabezado_error(linea)
     print(f"Identificador inválido en actuador: '{token}'")
-    print(f"  El ID solo puede contener letras, dígitos y guiones bajos,")
+    print(f"  El ID solo puede contener letras, dígitos y guiones bajos")
 
 def error_comentario_invalido(token, linea):
     encabezado_error(linea)
