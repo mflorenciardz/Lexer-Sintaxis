@@ -1,0 +1,6 @@
+// prueba
+
+WHEN sensor_luz < 400lux DO
+	foco_sala.brillo = 800%
+END
+

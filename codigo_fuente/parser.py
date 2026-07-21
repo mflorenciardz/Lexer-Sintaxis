@@ -116,6 +116,9 @@ class Parser:
 
             return self.comienza_instruccion()
 
+        if token == "TOKEN_ERROR_LEXICO":
+            return True
+
         if token in (
             "TOKEN_WHEN",
             "TOKEN_IF",
@@ -148,6 +151,9 @@ class Parser:
 
         elif token == "TOKEN_EVERY":
             self.every()
+
+        elif token == "TOKEN_ERROR_LEXICO":
+            self.avanzar()
 
         elif self.es_actuador():
             self.asignacion()

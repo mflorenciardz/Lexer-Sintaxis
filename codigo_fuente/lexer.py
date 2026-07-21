@@ -471,6 +471,10 @@ def tipo_error(token):
     if token.startswith("//"):
 
         return "COMENTARIO"
+
+    if token == "/": 
+
+        return "COMENTARIO_INVALIDO"
     
     if "/" in token:
 

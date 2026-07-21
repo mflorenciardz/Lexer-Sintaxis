@@ -33,6 +33,7 @@ ERRORES = {
     "CADENA": errores.error_cadena,
     "ACTUADOR_SIN_ID": errores.error_actuador_sin_id,
     "ID_INVALIDO": errores.error_id_invalido,
+    "COMENTARIO_INVALIDO": errores.error_comentario_invalido,
 }
 
 # lee un archivo .smart y devuelve todas sus líneas
@@ -216,6 +217,7 @@ elif opcion == "2":
     try:
         lineas = leer_archivo(nombre)
         tokens_programa = []
+        hubo_error_lexico = False
 
         for linea in lineas:
 
@@ -227,13 +229,23 @@ elif opcion == "2":
 
                 tokens_programa.extend(tokens)
 
+            else:
+                hubo_error_lexico = True
+                tokens_programa.append(("TOKEN_ERROR_LEXICO", linea_actual))
+
             linea_actual += 1
 
         parser = Parser(tokens_programa)
 
-        if parser.programa():
+        resultado_sintactico = parser.programa()
 
+        if hubo_error_lexico:
+
+            print("\n El archivo tiene errores léxicos. No se generará el HTML")
+
+        elif resultado_sintactico: 
             traducir(parser.datos_sensores, parser.datos_actuadores, nombre)
+
 
         print("\nFin del archivo.")
 
