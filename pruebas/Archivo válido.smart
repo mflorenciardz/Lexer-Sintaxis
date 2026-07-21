@@ -1,0 +1,49 @@
+// =====================================================================
+// ARCHIVO DE PRUEBA: CASO VÁLIDO COMPLETO (SINTAXIS Y SEMÁNTICA OK)
+// =====================================================================
+
+// Iluminación para una fiesta (Sensores y atributos correctos)
+WHEN sensor_luz < 400lux DO
+    foco_sala.estado = ON
+    foco_sala.brillo = 100%
+    foco_sala.color = violeta
+    foco_comedor.estado = ON
+    foco_comedor.brillo = 80%
+    foco_comedor.color = azul
+END
+
+// Ambiente agradable (Uso correcto de modo y temperatura objetivo)
+WHEN sensor_temp_int > 27°C DO
+    aire_acondicionado.estado = ON
+    aire_acondicionado.modo = FRIO
+    aire_acondicionado.temp_obj = 21°C
+END
+
+// Música de bienvenida
+WHEN sensor_movimiento == TRUE DO
+    altavoz_comedor.volumen = 70%
+    altavoz_comedor.mensaje = "Bienvenido a la Fiesta"
+END
+
+// Seguridad y notificaciones por Email estructuradas
+IF sensor_humo == TRUE THEN
+    alarma_casa.estado = ON
+    altavoz_comedor.volumen = 100%
+    altavoz_comedor.mensaje = "ATENCION INCENDIO"
+    altavoz_comedor.email_notif = bomberos@resistencia.gob.ar
+END
+
+// Cierre nocturno preventivo usando EVERY
+EVERY 1h DO
+    IF reloj_cocina.hora >= 23:00 THEN
+        cerradura_principal.estado = ON
+        persiana_sala.posicion = 0%
+        persiana_comedor.posicion = 0%
+    END
+END
+
+// Control de humedad ambiental
+WHEN sensor_humedad > 85% DO
+    aire_acondicionado.estado = ON
+    aire_acondicionado.modo = VENT
+END

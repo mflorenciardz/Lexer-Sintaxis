@@ -385,110 +385,37 @@ def agregar_actuadores(html, actuadores):
     html.append("</div>")
 
 
-# TRADUCCIÓN PRINCIPAL
-def traducir(lineas, nombre_archivo):
-
-    sensores = {}
-
-    actuadores = {}
-
-    for linea in lineas:
-
-        linea = limpiar(linea)
-
-        if linea == "":
-            continue
-
-        if comentario(linea):
-            continue
-
-        if (
-            es_when(linea)
-            or es_if(linea)
-            or es_every(linea)
-            or es_end(linea)
-            or es_else(linea)
-        ):
-
-            if es_when(linea) or es_if(linea):
-
-                lista_sensores = obtener_sensor(linea)
-
-                for sensor in lista_sensores:
-
-                    nombre = sensor["nombre"]
-
-                    if nombre not in sensores:
-
-                        sensores[nombre] = []
-
-                    texto = f'{sensor["operador"]} {sensor["valor"]}'
-
-                    if texto not in sensores[nombre]:
-
-                        sensores[nombre].append(texto)
-
-            continue
-
-        actuador = obtener_actuador(linea)
-
-        if actuador is None:
-
-            continue
-
-        nombre = actuador["nombre"]
-
-        atributo = actuador["atributo"]
-
-        valor = actuador["valor"]
-
-        if nombre not in actuadores:
-
-            actuadores[nombre] = {}
-
-        if atributo not in actuadores[nombre]:
-
-            actuadores[nombre][atributo] = []
-
-        if valor not in actuadores[nombre][atributo]:
-
-            actuadores[nombre][atributo].append(valor)
-
-
+# NUEVA TRADUCCIÓN PRINCIPAL: Reutiliza la información del Parser sin re-analizar texto crudo
+def traducir(datos_sensores, datos_actuadores, nombre_archivo):
     html = []
 
     agregar_encabezado(html, nombre_archivo)
 
     html.append('<div class="contenido">')
 
-    agregar_sensores(html, sensores)
+    agregar_sensores(html, datos_sensores)
 
-    agregar_actuadores(html, actuadores)
+    agregar_actuadores(html, datos_actuadores)
 
     html.append("</div>")
     html.append("</body>")
     html.append("</html>")
 
-
     carpeta_html = BASE / "HTML"
-
     carpeta_html.mkdir(exist_ok=True)
 
     ruta = carpeta_html / Path(nombre_archivo).with_suffix(".html")
 
     with open(ruta, "w", encoding="utf-8") as archivo:
-
         archivo.write("\n".join(html))
 
     # Copiar el logo a la carpeta HTML
-
     logo_origen = BASE / "logoHTML" / "logoPINKXEL.png"
     logo_destino = BASE / "HTML" / "logoPINKXEL.png"
 
     if logo_origen.exists():
-
         shutil.copy2(logo_origen, logo_destino)
 
     print(f"\n✓ Archivo HTML generado correctamente.")
     print(f"Nombre del archivo: {ruta.name}")
-    print("Se guardó dentro de la carpeta 'HTML'.")
+    print("Se guardó dentro de la carpeta 'HTML' reutilizando la información del Parser.")

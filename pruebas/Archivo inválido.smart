@@ -1,0 +1,45 @@
+// =====================================================================
+// ARCHIVO DE PRUEBA: CASOS DE ERROR (LÉXICOS, SINTÁCTICOS Y SEMÁNTICOS)
+// =====================================================================
+
+// 1. ERROR SINTÁCTICO: Falta la expresión lógica del WHEN
+WHEN DO
+    foco_entrada.estado = ON
+END
+
+// 2. ERROR SEMÁNTICO (El ejemplo del Prof. Vigil): Validación cruzada inválida
+// El atributo 'posicion' pertenece a una persiana, no a un foco.
+WHEN sensor_luz < 400lux DO
+    foco_entrada.posicion = 50%
+END
+
+// 3. ERROR SEMÁNTICO (El ejemplo del Prof. Vigil): Atributo de Solo Lectura
+// 'temp_act' es medida por la casa, el usuario no puede asignarle valor.
+WHEN sensor_temp_int > 25°C DO
+    aire_acondicionado.temp_act = 22°C
+END
+
+// 4. ERROR LÉXICO: Rango de iluminancia lux inválido (máximo 1000)
+WHEN sensor_luz > 1500lux DO
+    foco_sala.brillo = 100%
+END
+
+// 5. ERROR LÉXICO: Formato de hora inexistente o imposible
+IF reloj_cocina.hora > 26:80 THEN
+    cerradura_principal.estado = ON
+END
+
+// 6. ERROR LÉXICO: Cadena de texto literal sin cerrar comillas
+WHEN sensor_movimiento == TRUE DO
+    altavoz_comedor.mensaje = "Bienvenido a la Fiesta
+END
+
+// 7. ERROR LÉXICO: Email mal estructurado con doble @
+IF sensor_humo == TRUE THEN
+    altavoz_comedor.email_notif = bomberos@@resistencia.gob.ar
+END
+
+// 8. ERROR SINTÁCTICO: Operador lógico colgado sin segunda expresión
+IF sensor_humo == TRUE AND THEN
+    alarma_casa.estado = ON
+END

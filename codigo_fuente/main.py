@@ -1,7 +1,7 @@
 # buscamos automáticamente la carpeta principal del proyecto para que
 # el programa encuentre los archivos aunque se ejecute desde otro lugar
 from pathlib import Path
-from traductorHTML import traducir
+from traductorHTML import NOMBRE_GRUPO, traducir
 
 import sys
 
@@ -196,10 +196,13 @@ if opcion == "1":
 
             parser = Parser(tokens_programa)
 
+            # Si el análisis es exitoso, en modo interactivo solo damos el OK en consola.
+            # No llamamos a traducir() acá porque no hay un archivo físico guardado.
             parser.programa()
 
         linea_actual += 1
-#modo con archivo
+
+# modo con archivo
 elif opcion == "2":
 
     nombre = listar_archivos()
@@ -211,9 +214,7 @@ elif opcion == "2":
         exit()
 
     try:
-
         lineas = leer_archivo(nombre)
-
         tokens_programa = []
 
         for linea in lineas:
@@ -232,19 +233,12 @@ elif opcion == "2":
 
         if parser.programa():
 
-            traducir(lineas, nombre)
+            traducir(parser.datos_sensores, parser.datos_actuadores, nombre)
 
         print("\nFin del archivo.")
 
         input("\nPresione ENTER para cerrar...")
-
+        
     except Exception as error:
-
         print(f"\nError al leer el archivo: {error}")
-
         input("\nPresione ENTER para continuar...")
-
-else:
-
-    print("Opción inválida.")
-    input("\nPresione ENTER para cerrar...")

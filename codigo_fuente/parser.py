@@ -19,6 +19,8 @@ class Parser:
         self.posicion = 0         # empezamos leyendo el primer token
 
         self.errores = []
+        self.datos_sensores = {}
+        self.datos_actuadores = {}
 
     def token_actual(self):
         if self.posicion < len(self.tokens): #Para evitar errores de posiciones fuera de listado
@@ -56,7 +58,7 @@ class Parser:
         ):
             self.avanzar()
 
-    #ve si el token actual es el esperado
+    # Ve si el token actual es el esperado
     def coincidir(self, esperado):
 
         if self.token_actual() == esperado:
@@ -75,31 +77,29 @@ class Parser:
             self.recuperar()
 
     def programa(self):
-
-        while self.comienza_instruccion():
-
-            self.instruccion()
-
-        if self.token_actual() is not None:
-
-            self.error(
-                f"Línea {self.linea_actual()}: hay más tokens fuera del programa."
-            )
+        # Mientras queden tokens en el archivo, intentamos procesar
+        while self.token_actual() is not None:
+            if self.comienza_instruccion():
+                self.instruccion()
+            else:
+                # Si se topa con algo que no sabe qué es, tira el error,
+                # activa la recuperación para saltar al próximo bloque seguro y CONTINÚA
+                self.error(
+                    f"Línea {self.linea_actual()}: Componente inesperado o fuera de estructura: {self.token_actual()}."
+                )
+                self.recuperar()
+                
+                # Si después de recuperar sigue trabado en el mismo token, avanzamos uno a la fuerza
+                if self.token_actual() is not None:
+                    self.avanzar()
 
         if self.errores:
-
-            print("\nErrores sintácticos encontrados:\n")
-
+            print("\nErrores sintácticos/semánticos encontrados:\n")
             for error in self.errores:
-
                 print("•", error)
-
             return False
-
         else:
-
-            print("\n✓ Análisis sintáctico exitoso.")
-
+            print("\n✓ Análisis sintáctico y semántico exitoso.")
             return True
     
     def comienza_instruccion(self):
@@ -240,7 +240,6 @@ class Parser:
                 or token.startswith("TOKEN_ALARMA_")
             )
         )
-    
     def tipo_de_actuador(self, token_actuador): 
         
         if token_actuador is None: 
@@ -255,36 +254,43 @@ class Parser:
         return None 
 
     def asignacion(self):
-
-        atributo = self.actuador()
-
-        if self.atributo is None:
+       token_actuador_completo = self.token_actual() 
+       atributo: None | str = self.actuador()  
+       if atributo is None:
             return
+       
+       if atributo in ATRIBUTOS_SOLO_LECTURA:
+            self.error(f"Línea {self.linea_actual()}: el atributo {atributo} es de solo lectura y no puede asignarse")
 
-        if atributo in ATRIBUTOS_SOLO_LECTURA: 
-            self.error(
-                f"Línea {self.linea_actual()}: "
-                f"el atributo {atributo} es de solo lectura y no puede asignarse"
-            )
+            return
+       
+       self.coincidir("TOKEN_ASIGNACION")
+       info = self.informacion_atributo(atributo)
+       
+       if info is None:
+            self.error(f"Línea {self.linea_actual()}: Atributo desconocido: {atributo}.")
             self.recuperar()
             return
 
-        self.coincidir("TOKEN_ASIGNACION")
+        # Antes de esperar el valor, miramos cuál es para guardarlo
+        
+       valor_token = self.token_actual()
+       self.esperar_valor(info["valor"])
 
-        info = self.informacion_atributo(atributo)
-
-        if info is None:
-
-            self.error(
-                f"Línea {self.linea_actual()}: "
-                f"Atributo desconocido: {atributo}."
-            )
-
-            self.recuperar()
-
-            return
-
-        self.esperar_valor(info["valor"])
+        # Si no hubo errores, guardamos los datos limpios para el HTML
+       if token_actuador_completo and valor_token:
+            # Limpiamos los nombres sacando el prefijo "TOKEN_"
+            actuador_nombre = token_actuador_completo.replace("TOKEN_", "").lower()
+            atrib_nombre = atributo.replace("TOKEN_ATRIBUTO_", "").lower()
+            # Si el valor viene como TOKEN_NUMERO(25) o TOKEN_TRUE, extraemos lo de adentro o el estado
+            val_limpio = valor_token.replace("TOKEN_", "")
+            
+            if actuador_nombre not in self.datos_actuadores:
+                self.datos_actuadores[actuador_nombre] = {}
+            if atrib_nombre not in self.datos_actuadores[actuador_nombre]:
+                self.datos_actuadores[actuador_nombre][atrib_nombre] = []
+            if val_limpio not in self.datos_actuadores[actuador_nombre][atrib_nombre]:
+                self.datos_actuadores[actuador_nombre][atrib_nombre].append(val_limpio)
 
     def actuador(self):
         # guardamos el actuador antes de avanzar
@@ -312,11 +318,10 @@ class Parser:
         permitidos = ATRIBUTOS_POR_TIPO_ACTUADOR.get(tipo, ())
         if atributo not in permitidos:
             self.error(f"Línea {self.linea_actual()}: el atributo {atributo} no corresponde al actuador {token_actuador}.")
-            self.recuperar()
+
             return None
 
         return atributo
-
 
     def atributo(self):
 
@@ -653,69 +658,59 @@ class Parser:
 
 
     def expresion(self):
-
         token = self.token_actual()
-
         if token is None:
-
-            self.error(
-                f"Línea {self.linea_actual()}: "
-                "Se esperaba una expresión."
-            )
-
+            self.error(f"Línea {self.linea_actual()}: Se esperaba una expresión.")
             self.recuperar()
-
             return
 
+        # Si es un sensor, guardamos su estado de comparación
+        if token.startswith("TOKEN_SENSOR_NUM") or token.startswith("TOKEN_SENSOR_BOOL"):
+            sensor_nombre = token.replace("TOKEN_SENSOR_NUM(", "").replace("TOKEN_SENSOR_BOOL(", "").replace(")", "").lower()
+            
+            # Avanzamos temporalmente para mirar el operador y el valor
+            self.avanzar() # consume el sensor
+            operador_tok = self.token_actual()
+            self.avanzar() # consume el operador
+            valor_tok = self.token_actual()
+            
+            # Retrocedemos la posición para no romper la ejecución normal del parser
+            self.posicion -= 2
+            
+            # Formateamos el operador y valor limpio
+            op_limpio = "=="
+            if operador_tok == "TOKEN_MAYOR": op_limpio = ">"
+            elif operador_tok == "TOKEN_MENOR": op_limpio = "<"
+            elif operador_tok == "TOKEN_MAYOR_IGUAL": op_limpio = ">="
+            elif operador_tok == "TOKEN_MENOR_IGUAL": op_limpio = "<="
+            elif operador_tok == "TOKEN_DISTINTO": op_limpio = "!="
+            
+            val_limpio = valor_tok.replace("TOKEN_", "") if valor_tok else ""
+            texto_condicion = f"{op_limpio} {val_limpio}"
+            
+            if sensor_nombre not in self.datos_sensores:
+                self.datos_sensores[sensor_nombre] = []
+            if texto_condicion not in self.datos_sensores[sensor_nombre]:
+                self.datos_sensores[sensor_nombre].append(texto_condicion)
+
+        # Dejamos que el parser siga con su ejecución normal
         if token.startswith("TOKEN_SENSOR_NUM"):
-
             self.expresion_num()
-
             return
-
-        if token.startswith("TOKEN_SENSOR_BOOL"):
-
+        elif token.startswith("TOKEN_SENSOR_BOOL"):
             self.expresion_bool()
-
             return
-
-        if self.es_actuador():
-
+        elif self.es_actuador():
             atributo = self.actuador()
-
-            if atributo is None:
-                return
-
+            if atributo is None: return
             info = self.informacion_atributo(atributo)
-
-            if info is None:
-
-                self.error(
-                    f"Línea {self.linea_actual()}: "
-                    f"Atributo desconocido: {atributo}."
-                )
-
-                self.recuperar()
-
-                return
-
+            if info is None: return
             if info["operador"] == "bool":
-
-                if self.operador_bool() is None:
-                    return
-
+                self.operador_bool()
             else:
-
-                if self.operador_comp() is None:
-                    return
-
+                self.operador_comp()
             self.esperar_valor(info["valor"])
-
             return
 
-        self.error(
-            f"Línea {self.linea_actual()}: "
-            f"Se esperaba una expresión y se encontró {token}."
-        )
-
+        self.error(f"Línea {self.linea_actual()}: Se esperaba una expresión y se encontró {token}.")
         self.recuperar()
