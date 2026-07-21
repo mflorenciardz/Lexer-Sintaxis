@@ -303,6 +303,19 @@ def tokenizar(linea):
             i += 1
             continue
 
+        # Los operadores separan tokens aunque estén pegados al valor/identificador
+        if caracter in ("=", "<", ">", "!"):
+            if actual != "":
+                lista_tokens.append(actual)
+                actual = ""
+            operador = caracter 
+            if i + 1 < len(linea) and linea[i + 1] == "=":
+                operador += "="
+                i += 1 
+            lista_tokens.append(operador)
+            i += 1
+            continue
+        
         actual += caracter
         i += 1
 

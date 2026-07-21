@@ -126,11 +126,14 @@ class Parser:
         return self.es_actuador()
 
     def bloque(self):
-
-        self.instruccion()
-
+        if not self.comienza_instruccion():
+            self.error(
+                f"Línea {self.linea_actual()}: "
+                f"se esperaba al menos una instrucción en el bloque y se encontró {self.token_actual()}."
+            )
+            return
+        
         while self.comienza_instruccion():
-
             self.instruccion()
 
     def instruccion(self):
