@@ -38,6 +38,7 @@ SIMBOLOS = {
     "°",
     ">",
     "<",
+    "+",
 }
 
 # Sensores numéricos: admiten operadores de comparación (<, >, <=, >=, ==, !=)

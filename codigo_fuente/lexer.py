@@ -114,8 +114,10 @@ def verificar_alfabeto(texto):
 # A partir de acá empiezan las validaciones de cada tipo de dato.
 # La idea es revisar que tengan el formato correcto.
 
-# Un mail tiene que tener un solo @ y algo antes y después.
-# También revisamos que el dominio tenga un punto.
+# Un email válido tiene el formato: usuario@dominio.extension
+# El símbolo @ es obligatorio y solo puede aparecer una vez
+# El usuario y el dominio solo pueden tener letas, dígitos, guion bajo, signo + y signo -
+# La extensión tiene que ser de solo letras, de 2 a 4 de longitud
 def validar_email(email):
     if email.count("@") != 1:
         return False
@@ -126,11 +128,24 @@ def validar_email(email):
         return False
     if dominio == "":
         return False
+    for c in usuario: 
+        if not (c.isalpha() or c.isdigit() or c in ("_", ".", "+", "-")):
+            return False
+    for c in dominio: 
+        if not (c.isalpha() or c.isdigit() or c in ("_", ".", "+", "-")):
+            return False
     if "." not in dominio:
         return False
     if dominio.startswith("."):
         return False
     if dominio.endswith("."):
+        return False
+    if ".." in dominio: 
+        return False 
+    extension = dominio.split(".")[-1]
+    if not extension.isalpha():
+        return False 
+    if (len(extension) < 2) or (len(extension) > 4): 
         return False
     return True
 

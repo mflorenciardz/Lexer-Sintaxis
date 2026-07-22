@@ -27,6 +27,10 @@ class Parser:
         self.datos_sensores = {}
         self.datos_actuadores = {}
 
+        # true desde que se reporta el primer "fin de archivo inesperado"
+        # evita que el mismo aviso se repita por cada bloque anidado sin cerrar
+        self.fin_inesperado = False       
+
     def token_actual(self):
         if self.posicion < len(self.tokens): #Para evitar errores de posiciones fuera de listado
             return self.tokens[self.posicion][0]
@@ -81,6 +85,28 @@ class Parser:
 
             self.recuperar()
 
+    def cerrar_bloque(self, linea_inicio, tipo_bloque):
+
+        if self.token_actual() == "TOKEN_END":
+            self.avanzar()
+            return 
+
+        if self.token_actual() is None: 
+            if not self.fin_inesperado: 
+                self.error(
+                    f"Línea {linea_inicio}: el bloque {tipo_bloque} sin cerrar "
+                    f"se esperaba TOKEN_END y el archivo terminó antes de encontrarlo"
+                )
+                self.fin_inesperado = True 
+            return 
+
+        self.error(
+            f"Línea {self.linea_actual()}:  "
+            f"se esperaba TOKEN_END y se encontró {self.token_actual()}."
+        )
+        self.avanzar()
+        self.recuperar()
+        
     def programa(self):
         # Mientras queden tokens en el archivo, intentamos procesar
         while self.token_actual() is not None:
@@ -135,10 +161,11 @@ class Parser:
 
     def bloque(self):
         if not self.comienza_instruccion():
-            self.error(
-                f"Línea {self.linea_actual()}: "
-                f"se esperaba al menos una instrucción en el bloque y se encontró {self.token_actual()}."
-            )
+            if self.token_actual() is not None:
+                self.error(
+                    f"Línea {self.linea_actual()}: "
+                    f"se esperaba al menos una instrucción en el bloque y se encontró {self.token_actual()}."
+                )
             return
         
         while self.comienza_instruccion():
@@ -176,6 +203,8 @@ class Parser:
 
     def when(self):
 
+        linea_inicio = self.linea_actual()
+
         self.coincidir("TOKEN_WHEN")
 
         self.condicion()
@@ -184,9 +213,12 @@ class Parser:
 
         self.bloque()
 
-        self.coincidir("TOKEN_END")
+        self.cerrar_bloque(linea_inicio, "WHEN")
 
     def if_(self):
+
+        linea_inicio = self.linea_actual()
+
         self.coincidir("TOKEN_IF")
 
         self.condicion()
@@ -201,9 +233,11 @@ class Parser:
 
             self.bloque()
 
-        self.coincidir("TOKEN_END")
+        self.cerrar_bloque(linea_inicio, "IF")
 
     def every(self):
+
+        linea_inicio = self.linea_actual()
 
         self.coincidir("TOKEN_EVERY")
 
@@ -213,7 +247,7 @@ class Parser:
 
         self.bloque()
 
-        self.coincidir("TOKEN_END")
+        self.cerrar_bloque(linea_inicio, "EVERY")
 
     def condicion(self):
 
