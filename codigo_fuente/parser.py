@@ -51,7 +51,7 @@ class Parser:
 
         self.errores.append(mensaje)
 
-    def recuperar(self):
+    def recuperar(self, incluir_actuadores=False):
 
         sincronizacion = (
             "TOKEN_END",
@@ -59,16 +59,19 @@ class Parser:
             "TOKEN_WHEN",
             "TOKEN_IF",
             "TOKEN_EVERY",
+            "TOKEN_DO",
+            "TOKEN_THEN",
         )
 
         while (
             self.token_actual() is not None
             and self.token_actual() not in sincronizacion
+            and not (incluir_actuadores and self.es_actuador())
         ):
             self.avanzar()
 
     # Ve si el token actual es el esperado
-    def coincidir(self, esperado):
+    def coincidir(self, esperado, incluir_actuadores=False):
 
         if self.token_actual() == esperado:
 
@@ -83,7 +86,7 @@ class Parser:
 
             self.avanzar()
 
-            self.recuperar()
+            self.recuperar(incluir_actuadores)
 
     def cerrar_bloque(self, linea_inicio, tipo_bloque):
 
@@ -309,28 +312,30 @@ class Parser:
        
        if atributo in ATRIBUTOS_SOLO_LECTURA:
             self.error(f"Línea {self.linea_actual()}: el atributo {atributo} es de solo lectura y no puede asignarse")
-            self.recuperar()
+            self.recuperar(incluir_actuadores=True)
             return
        
-       self.coincidir("TOKEN_ASIGNACION")
+       self.coincidir("TOKEN_ASIGNACION", incluir_actuadores=True)
        info = self.informacion_atributo(atributo)
        
        if info is None:
             self.error(f"Línea {self.linea_actual()}: Atributo desconocido: {atributo}.")
-            self.recuperar()
+            self.recuperar(incluir_actuadores=True)
             return
 
         # Antes de esperar el valor, miramos cuál es para guardarlo
         
        valor_token = self.token_actual()
        linea_valor = self.linea_actual()
-       self.esperar_valor(info["valor"])
+       self.esperar_valor(info["valor"], incluir_actuadores=True)
+
+       if valor_token is not None: 
 
         # Validación semántica: temp_obj tiene un rango más estricto que el que ya validó el lexer (16°C a 30°C)
-       self.validar_rango_atributo(atributo, valor_token, linea_valor)
+        self.validar_rango_atributo(atributo, valor_token, linea_valor)
 
         # Si no hubo errores, guardamos los datos limpios para el HTML
-       if token_actuador_completo and valor_token:
+        if token_actuador_completo:
             # Limpiamos los nombres sacando el prefijo "TOKEN_"
             actuador_nombre = token_actuador_completo.replace("TOKEN_", "").lower()
             atrib_nombre = atributo.replace("TOKEN_ATRIBUTO_", "").lower()
@@ -372,7 +377,7 @@ class Parser:
         permitidos = ATRIBUTOS_POR_TIPO_ACTUADOR.get(tipo, ())
         if atributo not in permitidos:
             self.error(f"Línea {self.linea_actual()}: el atributo {atributo} no corresponde al actuador {token_actuador}.")
-            self.recuperar()
+            self.recuperar(incluir_actuadores=True)
             return None
 
         return atributo
@@ -409,7 +414,7 @@ class Parser:
             f"Se esperaba un atributo y se encontró {token}."
         )
 
-        self.recuperar()
+        self.recuperar(incluir_actuadores=True)
 
         return None
     
@@ -419,17 +424,17 @@ class Parser:
 
             "TOKEN_ATRIBUTO_ESTADO": {
                 "operador": "bool",
-                "valor": ("TOKEN_TRUE", "TOKEN_FALSE", "TOKEN_ON", "TOKEN_OFF"),
+                "valor": ("TOKEN_ON", "TOKEN_OFF"),
             },
 
             "TOKEN_ATRIBUTO_ACTIVADA": {
                 "operador": "bool",
-                "valor": ("TOKEN_TRUE", "TOKEN_FALSE", "TOKEN_ON", "TOKEN_OFF"),
+                "valor": ("TOKEN_ON", "TOKEN_OFF"),
             },
 
             "TOKEN_ATRIBUTO_MUTE": {
                 "operador": "bool",
-                "valor": ("TOKEN_TRUE", "TOKEN_FALSE", "TOKEN_ON", "TOKEN_OFF"),
+                "valor": ("TOKEN_ON", "TOKEN_OFF"),
             },
 
             "TOKEN_ATRIBUTO_TEMP_OBJ": {
@@ -495,6 +500,10 @@ class Parser:
 
         sensores = {
 
+            "TOKEN_SENSOR_NUM(SENSOR_TEMP)": {
+                "valor": ("TOKEN_TEMPERATURA",),
+            },
+            
             "TOKEN_SENSOR_NUM(SENSOR_TEMP_INT)": {
                 "valor": ("TOKEN_TEMPERATURA",),
             },
@@ -518,8 +527,6 @@ class Parser:
         if token in (
             "TOKEN_TRUE",
             "TOKEN_FALSE",
-            "TOKEN_ON",
-            "TOKEN_OFF",
         ):
 
             self.avanzar()
@@ -644,7 +651,7 @@ class Parser:
                 f"para {atributo} ({minimo}°C a {maximo}°C)."
             )
 
-    def esperar_valor(self, permitidos):
+    def esperar_valor(self, permitidos, incluir_actuadores=False):
 
         token = self.token_actual()
 
@@ -654,7 +661,7 @@ class Parser:
                 f"Línea {self.linea_actual()}: Se esperaba un valor."
             )
 
-            self.recuperar()
+            self.recuperar(incluir_actuadores)
 
             return None
 
@@ -674,7 +681,7 @@ class Parser:
             f"Se esperaba uno de {permitidos} y se encontró {token}."
         )
 
-        self.recuperar()
+        self.recuperar(incluir_actuadores)
 
         return None
 

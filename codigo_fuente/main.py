@@ -132,6 +132,8 @@ def analizar_linea(linea, linea_actual):
 
             hubo_error = True
 
+            tokens_parser.append(("TOKEN_ERROR_LEXICO", linea_actual))
+
             tipo = tipo_error(token_original)
 
             funcion_error = ERRORES.get(tipo)
@@ -230,13 +232,10 @@ elif opcion == "2":
 
                 tokens, hubo_error = analizar_linea(linea, linea_actual)
 
-                if not hubo_error:
+                tokens_programa.extend(tokens)
 
-                    tokens_programa.extend(tokens)
-
-                else:
+                if hubo_error:
                     hubo_error_lexico = True
-                    tokens_programa.append(("TOKEN_ERROR_LEXICO", linea_actual))
 
                 linea_actual += 1
 
